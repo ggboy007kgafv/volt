@@ -30,6 +30,33 @@ const nutritionRows = [
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+// True once the watched section gets close to the viewport (used to defer the
+// heavy per-section frame preloads so a cold visit doesn't download all ~850
+// frames at once — on a slow connection that starves the lower sections).
+function useNearViewport(elRef: { current: HTMLElement | null }, margin = 2000): boolean {
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el || !("IntersectionObserver" in window)) {
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: `${margin}px 0px` },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return near;
+}
+
 const products = [
   {
     id: "strawberry",
@@ -959,8 +986,13 @@ export default function Home() {
     };
   }, []);
 
-  // ---- Load second-section frames ----
+  const sec2Near = useNearViewport(nutritionSectionRef);
+  const aboutNear = useNearViewport(aboutSectionRef);
+  const strikeNear = useNearViewport(strikeSectionRef);
+
+  // ---- Load second-section frames (deferred until the section nears the viewport) ----
   useEffect(() => {
+    if (!sec2Near) return;
     let cancelled = false;
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = SECTION2_FRAME_SOURCES.map(() => null);
@@ -1008,10 +1040,11 @@ export default function Home() {
         }
       });
     };
-  }, []);
+  }, [sec2Near]);
 
-  // ---- Load third-section (about) frames ----
+  // ---- Load third-section (about) frames (deferred until the section nears the viewport) ----
   useEffect(() => {
+    if (!aboutNear) return;
     let cancelled = false;
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = ABOUT_FRAME_SOURCES.map(() => null);
@@ -1059,10 +1092,11 @@ export default function Home() {
         }
       });
     };
-  }, []);
+  }, [aboutNear]);
 
-  // ---- Load fourth-section (strike) frames ----
+  // ---- Load fourth-section (strike) frames (deferred until the section nears the viewport) ----
   useEffect(() => {
+    if (!strikeNear) return;
     let cancelled = false;
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = STRIKE_FRAME_SOURCES.map(() => null);
@@ -1110,7 +1144,7 @@ export default function Home() {
         }
       });
     };
-  }, []);
+  }, [strikeNear]);
 
   // ---- Hero canvas render loop ----
   useEffect(() => {
