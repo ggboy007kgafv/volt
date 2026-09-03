@@ -1,0 +1,2324 @@
+/*
+ * Verdant Kinetic direction: cinematic product-film surfaces, deep green-black depth,
+ * Volt Acid #B9F44A, silver-white type, organic liquid atmosphere, and asymmetric utility rails.
+ * Global tokens here keep the hero's material language consistent across every viewport.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.2rem;
+  --background: #07150f;
+  --foreground: #f0f1e7;
+  --card: #0e2619;
+  --card-foreground: #f0f1e7;
+  --popover: #0e2619;
+  --popover-foreground: #f0f1e7;
+  --primary: #b9f44a;
+  --primary-foreground: #07150f;
+  --secondary: #133420;
+  --secondary-foreground: #f0f1e7;
+  --muted: #6c8174;
+  --muted-foreground: #a6b6a9;
+  --accent: #b9f44a;
+  --accent-foreground: #07150f;
+  --destructive: #ef6a5c;
+  --destructive-foreground: #fff5f2;
+  --border: rgba(219, 242, 226, 0.18);
+  --input: rgba(219, 242, 226, 0.18);
+  --ring: #b9f44a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #07150f;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #07150f;
+  color: #f0f1e7;
+  font-family: "DM Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button:not(:disabled),
+a[href] {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #b9f44a;
+  outline-offset: 4px;
+}
+
+.volt-page {
+  overflow-x: clip;
+  background: #07150f;
+}
+
+.volt-hero {
+  position: relative;
+  height: 240vh;
+  overflow-x: clip;
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(38, 130, 56, 0.13), transparent 24%),
+    radial-gradient(ellipse at 50% 67%, rgba(185, 244, 74, 0.055), transparent 19%),
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(50% - 1px), rgba(185, 244, 74, 0.035) 50%, transparent calc(50% + 1px)),
+    #07150f;
+}
+
+.volt-hero::before,
+.volt-hero::after {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.volt-hero::before {
+  top: 11%;
+  right: 8%;
+  width: 28vw;
+  height: 76vh;
+  border: 1px solid rgba(185, 244, 74, 0.06);
+  border-radius: 50%;
+  transform: rotate(-17deg);
+  box-shadow: 0 0 100px rgba(79, 183, 77, 0.08);
+}
+
+.volt-hero::after {
+  top: 32%;
+  bottom: 18%;
+  left: 42px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(185, 244, 74, 0.22) 18%, rgba(185, 244, 74, 0.04) 82%, transparent);
+}
+
+.volt-sticky-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 620px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(5, 17, 10, 0.4), rgba(5, 17, 10, 0.72)),
+    url("/manus-storage/ezgif-frame-001_b86fcc7d.jpg") center / cover no-repeat,
+    url("/manus-storage/volt-source_c2eb844e.png") center / cover no-repeat,
+    radial-gradient(circle at 50% 45%, rgba(71, 178, 81, 0.22), transparent 31%),
+    radial-gradient(circle at 50% 90%, rgba(16, 91, 43, 0.32), transparent 46%),
+    #07150f;
+}
+
+.volt-canvas,
+.volt-vignette,
+.volt-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.volt-canvas {
+  z-index: 0;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.94) contrast(1.04) brightness(0.72);
+}
+
+.volt-vignette {
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3, 10, 7, 0.48) 0%, rgba(3, 10, 7, 0.06) 22%, rgba(3, 10, 7, 0.02) 58%, rgba(3, 10, 7, 0.62) 100%),
+    radial-gradient(ellipse at center, transparent 32%, rgba(1, 6, 4, 0.58) 100%);
+  mix-blend-mode: multiply;
+}
+
+.volt-grain {
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.11;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+.volt-header,
+.volt-bottom-bar,
+.volt-caption,
+.volt-progress {
+  position: absolute;
+  z-index: 3;
+}
+
+.volt-header {
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  padding: 28px 42px;
+  border-bottom: 1px solid rgba(221, 245, 224, 0.14);
+  color: #dbe8dd;
+}
+
+.volt-brand,
+.volt-header-meta,
+.volt-sound-toggle,
+.volt-bottom-bar,
+.volt-caption,
+.volt-eyebrow {
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.volt-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 10px;
+  color: #f1f4e9;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-decoration: none;
+}
+
+.volt-mark {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.volt-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  justify-self: center;
+  color: #b6c9b9;
+}
+
+.volt-live-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b9f44a;
+  box-shadow: 0 0 16px rgba(185, 244, 74, 0.9);
+}
+
+.volt-sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  color: #dbe8dd;
+  background: transparent;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.volt-sound-toggle:hover {
+  color: #b9f44a;
+  transform: translateY(-1px);
+}
+
+.volt-copy {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: min(90vw, 650px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 120ms linear;
+}
+
+.volt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 15px;
+  color: #c2d8c4;
+}
+
+.volt-eyebrow span {
+  width: 22px;
+  height: 1px;
+  background: #b9f44a;
+  box-shadow: 0 0 10px rgba(185, 244, 74, 0.7);
+}
+
+.volt-copy h1 {
+  margin: 0;
+  color: #f4f5ed;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(74px, 12vw, 176px);
+  font-weight: 400;
+  line-height: 0.82;
+  letter-spacing: 0.01em;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
+}
+
+.volt-subheading {
+  margin: 18px 0 0;
+  color: #dce8dc;
+  font-size: clamp(16px, 1.55vw, 22px);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+}
+
+.volt-subheading span {
+  color: #b9f44a;
+}
+
+.volt-caption {
+  top: 50%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #b8cabb;
+  line-height: 1.55;
+  transform: translateY(-50%);
+}
+
+.volt-caption-left {
+  left: 42px;
+}
+
+.volt-caption-right {
+  right: 42px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.volt-caption-index {
+  color: #b9f44a;
+  font-size: 11px;
+}
+
+.volt-progress {
+  top: 50%;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-50%);
+}
+
+.volt-progress-track {
+  position: relative;
+  width: 1px;
+  height: 116px;
+  background: rgba(215, 238, 218, 0.3);
+}
+
+.volt-progress-track span {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  background: #b9f44a;
+  box-shadow: 0 0 14px rgba(185, 244, 74, 0.7);
+  transition: height 80ms linear;
+}
+
+.volt-progress-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 116px;
+  color: #a8bda9;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.volt-progress-labels span:last-child {
+  color: #b9f44a;
+}
+
+.volt-bottom-bar {
+  right: 42px;
+  bottom: 29px;
+  left: 42px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #b7c9b8;
+}
+
+.volt-bottom-line {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(185, 244, 74, 0.8), rgba(217, 239, 219, 0.2));
+}
+
+.volt-bottom-bar span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #dce9dd;
+}
+
+.volt-after-section {
+  position: relative;
+  display: grid;
+  min-height: 62vh;
+  place-items: center;
+  overflow: hidden;
+  padding: 8rem 2rem;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(185, 244, 74, 0.1), transparent 24%),
+    radial-gradient(circle at 72% 30%, rgba(58, 153, 67, 0.16), transparent 32%),
+    #0b2115;
+}
+
+.volt-after-section::after {
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 180px;
+  height: 68%;
+  border: 1px solid rgba(185, 244, 74, 0.1);
+  border-radius: 50%;
+  transform: rotate(21deg);
+  box-shadow: 0 0 70px rgba(185, 244, 74, 0.05);
+  content: "";
+}
+
+.volt-after-section::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(185, 244, 74, 0.3);
+  content: "";
+}
+
+.volt-after-section > div {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+  text-align: center;
+}
+
+.volt-after-section h2 {
+  margin: 0;
+  color: #f0f4e9;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(56px, 9vw, 130px);
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.volt-after-section p:last-child {
+  margin: 20px 0 0;
+  color: #a3b9a7;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+/* ============================================================
+   Ingredients interstitial page (between hero and sequence)
+   ============================================================ */
+
+.volt-ingredients {
+  position: relative;
+  height: 100vh;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000000;
+  text-align: center;
+}
+
+.volt-ingredients::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 42vw;
+  height: 90vh;
+  border: 1px solid rgba(57, 255, 136, 0.05);
+  border-radius: 50%;
+  transform: rotate(-14deg);
+  pointer-events: none;
+}
+
+.volt-ingredients-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 0 24px;
+}
+
+.volt-ingredients .volt-eyebrow {
+  justify-content: center;
+  color: #39ff88;
+  margin-bottom: 0.6rem;
+}
+
+.volt-ingredients-heading {
+  margin: 0 auto;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 38px rgba(57, 255, 136, 0.14));
+}
+
+.volt-ingredients-heading .masked-heading__source {
+  object-fit: cover;
+}
+
+.volt-ingredients-sub {
+  margin: 1.4rem 0 0;
+  color: #8fa893;
+  font-size: 13px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.volt-ingredients-arrow {
+  display: inline-block;
+  margin-top: 2.6rem;
+  color: #39ff88;
+  opacity: 0.85;
+  animation: volt-ingredients-bob 2.2s ease-in-out infinite;
+}
+
+@keyframes volt-ingredients-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+/* --- About Volt interstitial: a smaller, compact band (not a full page) --- */
+.volt-about-intro {
+  height: 60vh;
+  min-height: 480px;
+}
+
+.volt-about-intro .volt-eyebrow {
+  margin-bottom: 0.4rem;
+}
+
+.volt-about-intro .volt-ingredients-sub {
+  margin-top: 1rem;
+}
+
+.volt-about-intro .volt-ingredients-arrow {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .volt-about-intro {
+    height: auto;
+    min-height: 0;
+    padding: 13vh 0 11vh;
+  }
+}
+
+/* ============================================================
+   Full-screen scroll section (second sequence + glass overlay)
+   ============================================================ */
+
+.volt-fullscreen-section {
+  position: relative;
+  height: 300vh;
+  overflow: visible;
+}
+
+.volt-fullscreen-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #07150f;
+}
+
+.volt-fullscreen-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.volt-fullscreen-copy {
+  position: absolute;
+  top: clamp(56px, 9vh, 110px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  text-align: center;
+  pointer-events: none;
+  max-width: 90%;
+  width: max-content;
+}
+
+.volt-fullscreen-copy .volt-eyebrow {
+  justify-content: center;
+  color: #ffffff;
+}
+
+.volt-fullscreen-copy h2 {
+  margin: 0.4rem 0;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55);
+}
+
+.volt-fullscreen-copy .volt-subheading {
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating glass panel — bottom right */
+.volt-glass-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 42px;
+  z-index: 4;
+  width: min(400px, 34vw);
+}
+
+.volt-glass-surface {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 1px 1px rgba(185, 244, 74, 0.12) inset,
+    0 0 20px 8px rgba(7, 21, 15, 0.4) inset,
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(185, 244, 74, 0.15);
+}
+
+.volt-glass-surface .glass-surface__content {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.volt-glass-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.volt-facts-panel {
+  padding: clamp(20px, 3vw, 36px);
+}
+
+
+
+.volt-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(215, 237, 219, 0.16);
+}
+
+.volt-panel-kicker {
+  color: #b9f44a;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.volt-panel-heading h3 {
+  margin: 8px 0 0;
+  color: #ecf1e6;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+}
+
+.volt-panel-status {
+  padding-top: 4px;
+  color: #9db39f;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.volt-facts-list {
+  margin-top: 18px;
+}
+
+.volt-fact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-bottom: 1px solid rgba(215, 237, 219, 0.11);
+  color: #c2d2c4;
+  font-size: 13px;
+}
+
+.volt-fact-row strong {
+  color: #b9f44a;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.volt-panel-footnote {
+  margin: 20px 0 0;
+  color: #718a78;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+
+/* ============================================================
+   About section (third sequence — scroll-canvas)
+   ============================================================ */
+
+.volt-about-section {
+  position: relative;
+  height: 300vh;
+  overflow: visible;
+}
+
+.volt-about-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #07150f;
+}
+
+.volt-about-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.volt-about-copy {
+  position: absolute;
+  top: clamp(56px, 9vh, 110px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  text-align: center;
+  pointer-events: none;
+  max-width: 90%;
+  width: max-content;
+}
+
+.volt-about-copy .volt-eyebrow {
+  justify-content: center;
+  color: #ffffff;
+}
+
+.volt-about-copy h2 {
+  margin: 0.4rem 0;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55);
+}
+
+.volt-about-copy .volt-subheading {
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+.volt-about-stage .volt-bottom-bar {
+  color: #d8e6da;
+}
+
+.volt-about-story {
+  position: absolute;
+  top: 50%;
+  left: clamp(42px, 8vw, 120px);
+  transform: translateY(-50%);
+  z-index: 3;
+  max-width: 380px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.volt-about-story p {
+  margin: 0;
+  color: #d8e6da;
+  font-size: clamp(15px, 1.4vw, 19px);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   Strike section (fourth sequence — scroll-canvas)
+   ============================================================ */
+
+.volt-strike-section {
+  position: relative;
+  height: 300vh;
+  overflow: visible;
+}
+
+.volt-strike-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #07150f;
+}
+
+.volt-strike-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.volt-strike-copy {
+  position: absolute;
+  top: clamp(56px, 9vh, 110px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  text-align: center;
+  pointer-events: none;
+  max-width: 90%;
+  width: max-content;
+}
+
+.volt-strike-copy h2 {
+  margin: 0.4rem 0;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55);
+}
+
+.volt-strike-copy .volt-subheading {
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+.volt-strike-stage .volt-bottom-bar {
+  color: #d8e6da;
+}
+
+@media (max-width: 800px) {
+  .volt-strike-copy {
+    right: 24px;
+    left: 24px;
+    max-width: none;
+    text-align: center;
+  }
+
+  .volt-strike-copy h2 {
+    font-size: clamp(44px, 13vw, 72px);
+  }
+}
+
+@media (max-width: 800px) {
+  .volt-about-story {
+    top: auto;
+    bottom: 110px;
+    left: 24px;
+    right: 24px;
+    transform: none;
+    max-width: none;
+  }
+
+  .volt-about-story p {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+}
+
+@media (max-width: 800px) {
+  .volt-about-copy {
+    width: auto;
+    max-width: 90%;
+  }
+
+  .volt-about-copy .volt-eyebrow {
+    justify-content: center;
+  }
+
+  .volt-about-copy h2 {
+    font-size: clamp(44px, 13vw, 72px);
+  }
+}
+
+@media (max-width: 800px) {
+  .volt-fullscreen-copy {
+    width: auto;
+    max-width: 90%;
+  }
+
+  .volt-fullscreen-copy h2 {
+    font-size: clamp(40px, 11vw, 72px);
+  }
+}
+
+@media (max-width: 800px) {
+  .volt-sticky-stage {
+    min-height: 540px;
+  }
+
+  .volt-header {
+    grid-template-columns: 1fr 1fr;
+    padding: 22px 20px;
+  }
+
+  .volt-header-meta {
+    display: none;
+  }
+
+  .volt-sound-toggle {
+    font-size: 9px;
+  }
+
+  .volt-caption {
+    top: auto;
+    bottom: 88px;
+    transform: none;
+  }
+
+  .volt-caption-left {
+    left: 20px;
+  }
+
+  .volt-caption-right {
+    right: 20px;
+  }
+
+  .volt-progress {
+    top: auto;
+    right: 20px;
+    bottom: 88px;
+    transform: none;
+  }
+
+  .volt-progress-track,
+  .volt-progress-labels {
+    height: 76px;
+  }
+
+  .volt-bottom-bar {
+    right: 20px;
+    bottom: 24px;
+    left: 20px;
+    gap: 10px;
+    font-size: 8px;
+  }
+
+  .volt-bottom-bar span:first-child {
+    display: none;
+  }
+
+  .volt-copy {
+    top: 48%;
+  }
+
+  .volt-copy h1 {
+    font-size: clamp(65px, 21vw, 108px);
+  }
+
+  .volt-subheading {
+    margin-top: 14px;
+    font-size: 13px;
+  }
+
+  .volt-eyebrow {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 800px) {
+  .volt-nutrition-section {
+    min-height: auto;
+    padding: 5rem 20px 6rem;
+  }
+
+  .volt-glass-panel {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    width: 100%;
+    max-height: none;
+    margin-top: 2rem;
+  }
+
+  .volt-fullscreen-section {
+    height: auto;
+  }
+
+  .volt-fullscreen-stage {
+    position: relative;
+    height: 60vh;
+  }
+
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .volt-copy,
+  .volt-progress-track span,
+  .volt-sound-toggle {
+    transition: none;
+  }
+}
+
+
+/* ============================================================
+   Navigation Bar with GooeyNav
+   ============================================================ */
+
+.volt-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.volt-nav > .volt-nav-particle-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 200;
+}
+
+.volt-nav-particle {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, #39ff88 0%, #22c55e 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 200;
+  animation: navParticleBurst var(--duration, 1.2s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes navParticleBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(-50% + var(--tx) * 0.3), calc(-50% + var(--ty) * 0.3)) scale(1.3);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(calc(-50% + var(--tx) * 0.8), calc(-50% + var(--ty) * 0.8)) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0);
+    opacity: 0;
+  }
+}
+
+.volt-nav > * {
+  pointer-events: auto;
+}
+
+.volt-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 14px 32px;
+  width: 100%;
+  background: rgba(7, 21, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(185, 244, 74, 0.1);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Pill glass nav — scrolled state */
+.volt-nav-pill-glass {
+  width: auto;
+  margin: 8px auto 0;
+}
+
+.volt-nav-pill-glass .volt-nav-glass-surface {
+  width: 100% !important;
+  height: 52px !important;
+  border-radius: 100px !important;
+  box-shadow:
+    0 0 1px 1px rgba(185, 244, 74, 0.08) inset,
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(185, 244, 74, 0.1);
+  overflow: hidden;
+}
+
+.volt-nav-pill-glass .glass-surface__content {
+  padding: 0;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.volt-nav-pill-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+  height: 100%;
+  padding: 0 28px;
+}
+
+.volt-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f1f4e9;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.volt-nav-brand-icon {
+  color: #b9f44a;
+  filter: drop-shadow(0 0 8px rgba(185, 244, 74, 0.6));
+}
+
+.volt-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.volt-nav-link {
+  color: rgba(219, 232, 221, 0.6);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1.5px solid transparent;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.volt-nav-link:hover {
+  color: #dbe8dd;
+}
+
+.volt-nav-link--active {
+  color: #39ff88;
+  border-bottom-color: #39ff88;
+}
+
+.volt-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: 1rem;
+}
+
+.volt-nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a8bda9;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.volt-nav-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b9f44a;
+  box-shadow: 0 0 12px rgba(185, 244, 74, 0.8);
+}
+
+.volt-nav-sound {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a8bda9;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.volt-nav-sound:hover {
+  color: #b9f44a;
+}
+
+@media (max-width: 800px) {
+  .volt-nav-inner {
+    padding: 10px 16px;
+    gap: 1rem;
+  }
+
+  .volt-nav--scrolled .volt-nav-inner {
+    padding: 10px 20px;
+    border-radius: 100px;
+  }
+
+  .volt-nav-controls {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .volt-nav-links {
+    gap: 0.9rem;
+  }
+
+  .volt-nav-link {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .volt-nav-brand {
+    margin-right: 0.4rem;
+  }
+
+  .volt-nav-pill-content {
+    gap: 1rem;
+    padding: 0 14px;
+  }
+}
+
+@media (max-width: 560px) {
+  .volt-nav-brand {
+    gap: 5px;
+    margin-right: 0.2rem;
+    font-size: 0;
+  }
+
+  .volt-nav-link {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+}
+
+/* ============================================================
+   CountUp Nutrition Values
+   ============================================================ */
+
+.volt-fact-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: #39ff88;
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.volt-fact-unit {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(182, 201, 185, 0.6);
+  letter-spacing: 0.05em;
+}
+
+.count-up-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+.volt-particle-text-wrap {
+  width: 100%;
+  height: 180px;
+  margin: 0.5rem 0;
+}
+
+.volt-particle-text-wrap .particle-text {
+  min-height: 180px;
+}
+
+/* ============================================================
+   Products page — liquid-glass cards over a green starfield
+   ============================================================ */
+
+.volt-products {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 8%, rgba(22, 66, 41, 0.4), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 102%, rgba(8, 34, 21, 0.6), transparent 68%),
+    radial-gradient(ellipse 40% 32% at 18% 78%, rgba(15, 70, 42, 0.25), transparent 70%),
+    #020604;
+}
+
+.volt-starfield {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.volt-products-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: clamp(150px, 17vh, 210px) clamp(18px, 4vw, 48px) clamp(110px, 14vh, 180px);
+}
+
+.volt-products-head {
+  text-align: center;
+  margin-bottom: clamp(42px, 6vh, 74px);
+}
+
+.volt-products-head .volt-eyebrow {
+  justify-content: center;
+  color: #9dffc0;
+}
+
+.volt-products-head h2 {
+  margin: 0.3rem 0 0.6rem;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(56px, 7.5vw, 116px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
+}
+
+.volt-products-head .volt-subheading {
+  color: #d9f0de;
+}
+
+/* --- Can selector carousel --- */
+.volt-product-kicker {
+  margin: 0 0 2px;
+  color: #7dffa8;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.volt-product-desc {
+  margin: 0 0 18px;
+  color: #cfe4d3;
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.volt-product-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-top: 1px solid rgba(185, 244, 74, 0.16);
+  padding-top: 14px;
+}
+
+.volt-product-unit {
+  color: #8ba391;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* --- Interactive review bubbles on product cards (no star icons) --- */
+.volt-bub-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: -4px 0 16px;
+  cursor: default;
+}
+.volt-can-details .volt-bub-row {
+  justify-content: center;
+}
+.volt-bubs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.volt-bub {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(157, 255, 194, 0.4);
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.12) 12%, transparent 44%),
+    radial-gradient(circle at 50% 58%, rgba(157, 255, 194, 0.2), rgba(255, 255, 255, 0.04) 80%);
+  box-shadow: inset 0 -2px 4px rgba(7, 21, 15, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+.volt-bub:hover {
+  transform: scale(1.25);
+}
+.volt-bub.on {
+  border-color: rgba(185, 244, 74, 0.95);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.14) 10%, transparent 42%),
+    radial-gradient(circle at 50% 62%, #b9f44a, #2ee97c 55%, #15803d);
+  box-shadow:
+    0 0 12px rgba(57, 255, 136, 0.6),
+    inset 0 -2px 4px rgba(6, 46, 24, 0.55);
+  animation: voltBubPop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes voltBubPop {
+  0% {
+    transform: scale(0.6);
+  }
+  55% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.volt-bub-caption {
+  color: #8ba391;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+.volt-bub-row:hover .volt-bub-caption {
+  color: #9dffc2;
+}
+
+.volt-can-carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.volt-can-stage {
+  position: relative;
+  width: min(94vw, 900px);
+  height: clamp(300px, 54vh, 500px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.volt-can-glow {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(64vw, 620px);
+  height: min(64vw, 620px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.32;
+  transition: background-color 0.7s ease;
+  pointer-events: none;
+}
+
+.volt-can-img {
+  position: absolute;
+  height: clamp(240px, 44vh, 430px);
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 28px 44px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(57, 255, 136, 0.1));
+  will-change: transform, opacity;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.volt-can-img.enter-next {
+  animation: voltCanInNext 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-can-img.enter-prev {
+  animation: voltCanInPrev 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-can-img.leave-next {
+  animation: voltCanOutNext 0.7s cubic-bezier(0.6, 0, 0.6, 0.2) both;
+}
+.volt-can-img.leave-prev {
+  animation: voltCanOutPrev 0.7s cubic-bezier(0.6, 0, 0.6, 0.2) both;
+}
+
+@keyframes voltCanInNext {
+  from { transform: translateX(140px) scale(0.93); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes voltCanInPrev {
+  from { transform: translateX(-140px) scale(0.93); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes voltCanOutNext {
+  from { transform: none; opacity: 1; }
+  to { transform: translateX(-140px) scale(0.93); opacity: 0; }
+}
+@keyframes voltCanOutPrev {
+  from { transform: none; opacity: 1; }
+  to { transform: translateX(140px) scale(0.93); opacity: 0; }
+}
+
+.volt-can-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 34, 23, 0.45);
+  border: 1px solid rgba(157, 255, 194, 0.28);
+  color: #eafff2;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.volt-can-prev { left: clamp(0px, 2vw, 44px); }
+.volt-can-next { right: clamp(0px, 2vw, 44px); }
+.volt-can-nav:hover {
+  background: rgba(57, 255, 136, 0.14);
+  border-color: rgba(157, 255, 194, 0.65);
+  box-shadow: 0 0 26px rgba(57, 255, 136, 0.28);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.volt-can-details {
+  text-align: center;
+  max-width: 620px;
+  animation: voltDetailIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes voltDetailIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.volt-can-name {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(40px, 5vw, 66px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
+}
+
+.volt-can-price-row {
+  margin-top: 18px;
+  justify-content: center;
+  gap: 22px;
+  border-top: none;
+  padding-top: 4px;
+}
+
+.volt-product-price {
+  font-size: clamp(26px, 3vw, 34px);
+}
+
+.volt-can-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.volt-can-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: rgba(157, 255, 194, 0.22);
+  cursor: pointer;
+  transition: background 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+}
+.volt-can-dot:hover { background: rgba(157, 255, 194, 0.55); }
+.volt-can-dot.active {
+  background: #b9f44a;
+  box-shadow: 0 0 14px rgba(185, 244, 74, 0.85);
+  transform: scale(1.3);
+}
+
+@media (max-width: 640px) {
+  .volt-products-inner {
+    padding-top: 150px;
+    padding-bottom: 110px;
+  }
+
+  .volt-products-head h2 {
+    font-size: clamp(46px, 14vw, 68px);
+  }
+
+  .volt-can-stage {
+    height: 330px;
+  }
+
+  .volt-can-img {
+    height: 250px;
+  }
+
+  .volt-can-nav {
+    width: 46px;
+    height: 46px;
+  }
+
+  .volt-can-glow {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+
+/* --- Full-lineup grid below the selector --- */
+.volt-grid-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: clamp(72px, 9vh, 110px) 0 38px;
+  color: #7dffa8;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.volt-grid-label::before,
+.volt-grid-label::after {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #b9f44a);
+  opacity: 0.65;
+}
+.volt-grid-label::after {
+  background: linear-gradient(90deg, #b9f44a, transparent);
+}
+
+.volt-products-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(20px, 2.4vw, 34px);
+}
+
+.volt-product {
+  width: clamp(250px, 22vw, 300px);
+  border-radius: 26px;
+  cursor: pointer;
+  outline: none;
+  perspective: 1000px;
+}
+
+/* 3D tilt wrapper: rotates toward the cursor via --rx / --ry */
+.volt-product-tilt {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.volt-product:hover .volt-product-tilt {
+  /* snappier while the pointer is moving, eased when it rests/leaves */
+  transition-duration: 0.14s;
+}
+
+/* glare sheen that follows the cursor across the card face */
+.volt-product-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 26px;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    rgba(214, 255, 233, 0.32) 0%,
+    rgba(255, 255, 255, 0.1) 24%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  transition: opacity 0.35s ease;
+}
+
+.volt-product:hover .volt-product-glare {
+  opacity: 1;
+}
+
+.volt-product-glass {
+  border-radius: 26px !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.14) inset,
+    0 0 22px 6px rgba(7, 21, 15, 0.42) inset,
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 4px 16px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(57, 255, 136, 0.18);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease, border-color 0.5s ease;
+}
+
+.volt-product:hover .volt-product-glass {
+  transform: translateY(-8px);
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.3) inset,
+    0 0 30px 8px rgba(7, 21, 15, 0.4) inset,
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 48px -6px rgba(57, 255, 136, 0.4);
+}
+
+.volt-product[data-active="true"] .volt-product-glass,
+.volt-product:focus-visible .volt-product-glass {
+  border-color: rgba(185, 244, 74, 0.75);
+  box-shadow:
+    0 0 1px 1px rgba(185, 244, 74, 0.35) inset,
+    0 0 30px 8px rgba(7, 21, 15, 0.4) inset,
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 54px -4px rgba(185, 244, 74, 0.55);
+}
+
+.volt-product-glass .glass-surface__content {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.volt-product-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 18px 18px;
+}
+
+.volt-product-media {
+  position: relative;
+  height: clamp(180px, 24vh, 240px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.volt-product-media img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.5));
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.volt-product:hover .volt-product-media img {
+  transform: scale(1.06);
+}
+
+.volt-product-name {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 980px) {
+  .volt-product {
+    width: clamp(250px, 42vw, 340px);
+  }
+}
+
+@media (max-width: 640px) {
+  .volt-products-inner {
+    padding-bottom: 110px;
+  }
+
+  .volt-product {
+    width: min(84vw, 360px);
+  }
+
+  .volt-grid-label {
+    font-size: 8.5px;
+    margin-top: 60px;
+  }
+}
+
+/* --- Layout reveal + extra smooth motion --- */
+.volt-reveal {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+  filter: blur(7px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+
+.volt-reveal.in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .volt-reveal {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.volt-can-glow {
+  animation: voltGlowPulse 4.5s ease-in-out infinite;
+}
+
+@keyframes voltGlowPulse {
+  0%, 100% { opacity: 0.26; }
+  50% { opacity: 0.45; }
+}
+
+.volt-products-head .volt-eyebrow span {
+  animation: voltDashPulse 3s ease-in-out infinite;
+}
+
+@keyframes voltDashPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* --- Footer (uses the same liquid-transition nav links) --- */
+.volt-footer {
+  position: relative;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 70% 90% at 50% 115%, rgba(9, 40, 22, 0.7), transparent 70%),
+    #030705;
+  border-top: 1px solid rgba(57, 255, 136, 0.14);
+}
+
+.volt-footer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 80vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(57, 255, 136, 0.7), transparent);
+  box-shadow: 0 0 18px rgba(57, 255, 136, 0.5);
+}
+
+.volt-footer-inner {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(54px, 7vh, 84px) clamp(20px, 4vw, 48px) clamp(30px, 4vh, 44px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+}
+
+.volt-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.volt-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(14px, 3vw, 34px);
+}
+
+.volt-footer-links .volt-nav-link {
+  color: #b9cdbc;
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  padding: 6px 2px;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.volt-footer-links .volt-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: 0;
+  height: 1px;
+  background: #39ff88;
+  transition: right 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.volt-footer-links .volt-nav-link:hover {
+  color: #eafff2;
+}
+
+.volt-footer-links .volt-nav-link:hover::after {
+  right: 0;
+}
+
+.volt-footer-note {
+  margin: 6px 0 0;
+  color: #54715f;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   Customer reviews — soda-fizz bubbles + fluid glass cards
+   ============================================================ */
+
+.volt-reviews {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 46% at 50% 6%, rgba(16, 78, 45, 0.38), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 50% 96%, rgba(9, 44, 26, 0.55), transparent 66%),
+    #010504;
+}
+
+.volt-bubbles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+.volt-reviews-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: clamp(150px, 17vh, 210px) clamp(18px, 4vw, 48px) clamp(110px, 14vh, 180px);
+}
+
+.volt-reviews-head {
+  text-align: center;
+  margin-bottom: clamp(28px, 4vh, 46px);
+}
+
+.volt-reviews-head .volt-eyebrow {
+  justify-content: center;
+  color: #9dffc0;
+}
+
+.volt-reviews-head h2 {
+  margin: 0.3rem 0 0.6rem;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(56px, 7.5vw, 116px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
+}
+
+.volt-reviews-head .volt-subheading {
+  color: #d9f0de;
+}
+
+/* --- aggregate rating panel --- */
+.volt-reviews-summary {
+  max-width: 880px;
+  margin: 0 auto clamp(40px, 6vh, 64px);
+}
+
+.volt-rating-glass {
+  border-radius: 26px !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.12) inset,
+    0 0 20px 6px rgba(7, 21, 15, 0.38) inset,
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 4px 16px rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(57, 255, 136, 0.16);
+}
+
+.volt-rating-glass .glass-surface__content {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.volt-rating-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(26px, 5vw, 66px);
+  padding: clamp(26px, 3.6vw, 40px) clamp(22px, 4vw, 54px);
+}
+
+.volt-rating-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 200px;
+}
+
+.volt-reviews-big {
+  color: #9dffc2;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(52px, 6vw, 74px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 26px rgba(57, 255, 136, 0.4);
+}
+
+.volt-reviews-summary .volt-reviews-stars {
+  color: #b9f44a;
+  font-size: clamp(14px, 1.5vw, 17px);
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(185, 244, 74, 0.3);
+}
+
+.volt-reviews-count {
+  margin-top: 3px;
+  color: #8ba898;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* --- star distribution bars --- */
+.volt-rating-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 250px;
+  max-width: 430px;
+}
+
+.volt-rating-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.volt-rating-label {
+  color: #d5e9db;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.volt-rating-label span {
+  margin-left: 2px;
+  color: #b9f44a;
+  font-size: 10px;
+}
+
+.volt-rating-track {
+  display: block;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.volt-rating-fill {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #39ff88, #b9f44a);
+  box-shadow: 0 0 10px rgba(57, 255, 136, 0.45);
+}
+
+.volt-rating-pct {
+  color: #7f9a8b;
+  font-size: 10.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- fluid glass review cards --- */
+.volt-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(18px, 2.2vw, 30px);
+}
+
+.volt-review {
+  min-width: 0;
+  border-radius: 26px;
+}
+
+.volt-review-glass {
+  border-radius: 26px !important;
+  overflow: hidden;
+  height: 100%;
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.12) inset,
+    0 0 20px 6px rgba(7, 21, 15, 0.38) inset,
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 4px 16px rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(57, 255, 136, 0.16);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease, border-color 0.5s ease;
+}
+
+.volt-review:hover .volt-review-glass {
+  transform: translateY(-6px);
+  border-color: rgba(57, 255, 136, 0.3);
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.26) inset,
+    0 0 26px 8px rgba(7, 21, 15, 0.36) inset,
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 46px -6px rgba(57, 255, 136, 0.38);
+}
+
+.volt-review-glass .glass-surface__content {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.volt-review-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 22px 20px;
+  text-align: left;
+}
+
+.volt-review-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.volt-review-meta-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+.volt-review-when {
+  color: #78917f;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.volt-review-stars {
+  color: #b9f44a;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(185, 244, 74, 0.35);
+}
+
+.volt-review-stars-dim {
+  color: rgba(255, 255, 255, 0.16);
+  text-shadow: none;
+}
+
+.volt-review-flavor {
+  color: #7dffa8;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.volt-review-quote {
+  flex: 1;
+  margin: 0 0 20px;
+  color: #eef8f1;
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.volt-review-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.volt-review-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: none;
+  color: #04120a;
+  background: linear-gradient(135deg, #39ff88, #16a34a);
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 14px rgba(57, 255, 136, 0.35);
+}
+
+.volt-review-who strong {
+  display: block;
+  margin: 0 0 1px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.volt-review-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7f9a8b;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+
+.volt-review-check {
+  color: #39ff88;
+  flex: none;
+}
+
+@media (max-width: 980px) {
+  .volt-reviews-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .volt-reviews-inner {
+    padding-bottom: 110px;
+  }
+
+  .volt-reviews-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .volt-reviews-summary {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+}

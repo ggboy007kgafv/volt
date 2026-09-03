@@ -1,0 +1,89 @@
+/* ============================================================
+   LiquidTransition — procedural gooey green liquid page sweep
+   ============================================================ */
+
+.volt-liq {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.volt-liq--active {
+  visibility: visible;
+  pointer-events: auto; /* block interaction while the sweep runs */
+}
+
+/* The liquid sheet: anchored at the viewport top, extends 320px past the
+   bottom so it can overshoot. translateY moves its top edge:
+   idle = below the viewport · cover = wave band above the top · exit = gone */
+.volt-liq__sheet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 320px);
+  transform: translate3d(0, calc(100% - 240px), 0);
+  will-change: transform;
+  transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.volt-liq__sheet.volt-liq__no-anim {
+  transition: none;
+}
+
+/* Wavy top surface: two drifting layers, 200% wide so the -50% drift
+   keyframe loops seamlessly (pattern repeats every viewport width). */
+.volt-liq__wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 200%;
+  height: 200px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.volt-liq__wave--back {
+  animation: voltLiqDrift 12s linear infinite reverse;
+}
+
+.volt-liq__wave--front {
+  animation: voltLiqDrift 8s linear infinite;
+}
+
+@keyframes voltLiqDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Deep liquid body behind the wave band, with a bright top glow and a
+   soft darker falloff at the very bottom. */
+.volt-liq__body {
+  position: absolute;
+  top: 200px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #16a34a 0%, #0c5c28 55%, #052e16 100%);
+}
+
+.volt-liq__body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(95% 60% at 50% 0%, rgba(57, 255, 136, 0.18), transparent 65%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .volt-liq {
+    display: none;
+  }
+}

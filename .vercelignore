@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+.freebuff
+.manus-logs
+vercel
+*.log
+.DS_Store
