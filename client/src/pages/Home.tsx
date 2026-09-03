@@ -402,11 +402,12 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
     let stars: { x: number; y: number; r: number; a: number; sp: number; ph: number; g: boolean; vx: number; vy: number; dep: number }[] = [];
     let w = 0;
     let h = 0;
     let raf = 0;
+    let frameSkip = false;
     let lastScrollY = window.scrollY;
 
     // drifting nebula glows (green tints)
@@ -429,7 +430,7 @@ export default function Home() {
       canvas.height = Math.max(1, Math.floor(h * dpr));
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
-      const count = Math.min(Math.floor((w * h) / 6500), 340);
+      const count = Math.min(Math.floor((w * h) / 8500), 240);
       stars = Array.from({ length: count }, () => {
         const big = Math.random() < 0.14;
         return {
@@ -497,6 +498,12 @@ export default function Home() {
         raf = 0;
         return;
       }
+      // Ambient background: render every other frame (30fps is plenty for a starfield)
+      frameSkip = !frameSkip;
+      if (frameSkip) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       const t = time / 1000;
@@ -521,11 +528,13 @@ export default function Home() {
         const tw = 0.5 + 0.5 * Math.sin(t * s.sp + s.ph);
         const alpha = s.a * (0.2 + 0.8 * tw);
         ctx.fillStyle = s.g ? "#9dffc2" : "#ffffff";
-        // soft glow halo for the brighter stars
-        ctx.globalAlpha = alpha * 0.22;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * 3.4, 0, Math.PI * 2);
-        ctx.fill();
+        // soft glow halo only for the brighter stars (haloing all 300+ is the expensive part)
+        if (s.r > 1.6) {
+          ctx.globalAlpha = alpha * 0.22;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r * 3.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.globalAlpha = alpha;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -592,11 +601,12 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
     let w = 0;
     let h = 0;
     let raf = 0;
     let last = 0;
+    let frameSkip = false;
     let mx = -1e4;
     let my = -1e4;
     let mouseIn = false;
@@ -685,6 +695,12 @@ export default function Home() {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
       const t = now / 1000;
+      // Ambient background: render every other frame
+      frameSkip = !frameSkip;
+      if (frameSkip) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
