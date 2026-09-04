@@ -1705,7 +1705,7 @@ export default function Home() {
           {/* CTA to the next page — Flavors */}
           <a href="#strike" className="volt-about-cta volt-about-film-cta volt-nav-link" aria-label="Continue to the Volt flavors">
             Explore flavors
-            <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+            <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
           </a>
 
           {/* Bottom bar */}

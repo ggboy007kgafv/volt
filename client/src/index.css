@@ -569,7 +569,7 @@ a:focus-visible {
   align-items: center;
   gap: 10px;
   margin-top: 2rem;
-  padding: 13px 26px;
+  padding: 17px 38px;
   border-radius: 100px;
   border: 1px solid rgba(157, 255, 194, 0.45);
   background: linear-gradient(180deg, rgba(20, 60, 34, 0.55), rgba(8, 20, 13, 0.65));
@@ -578,8 +578,8 @@ a:focus-visible {
     0 0 26px -6px rgba(57, 255, 136, 0.5),
     0 10px 30px rgba(0, 0, 0, 0.4);
   color: #eafff2;
-  font-size: 11px;
-  letter-spacing: 0.28em;
+  font-size: 14px;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   text-decoration: none;
   transition:
@@ -601,7 +601,7 @@ a:focus-visible {
 .volt-about-film-cta {
   position: absolute;
   left: 50%;
-  bottom: 84px;
+  bottom: 96px;
   transform: translateX(-50%);
   z-index: 4;
   margin: 0;
