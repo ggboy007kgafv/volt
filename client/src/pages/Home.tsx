@@ -9,6 +9,7 @@ import CountUp from "@/components/CountUp";
 import GlassSurface from "@/components/GlassSurface";
 import MaskedHeading from "@/components/MaskedHeading";
 import LiquidTransition, { LiquidTransitionHandle } from "@/components/LiquidTransition";
+import SupportChat from "@/components/SupportChat";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
 import { VOLT_FRAME_SOURCES } from "@/lib/voltFrameSources";
@@ -230,6 +231,212 @@ const RATING_DIST = [
   { stars: 1, pct: 0.4 },
 ] as const;
 
+/* ------------------------------------------------------------------ */
+/* Shared soda-fizz bubble background — Products & Reviews pages.   */
+/* Bubbles rise like carbonation and dodge away from the cursor.    */
+/* Returns a cleanup function.                                      */
+/* ------------------------------------------------------------------ */
+function runBubbleCanvas(
+  canvas: HTMLCanvasElement,
+  reducedMotion: boolean,
+): () => void {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return () => {};
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+  let w = 0;
+  let h = 0;
+  let raf = 0;
+  let last = 0;
+  let frameSkip = false;
+  let mx = -1e4;
+  let my = -1e4;
+  let mouseIn = false;
+
+  let bubbles: {
+    x: number;
+    y: number;
+    r: number;
+    rise: number;
+    sp: number;
+    ph: number;
+    a: number;
+    rvx: number;
+    rvy: number;
+  }[] = [];
+
+  const build = () => {
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    w = parent.clientWidth;
+    h = parent.clientHeight;
+    canvas.width = Math.max(1, Math.floor(w * dpr));
+    canvas.height = Math.max(1, Math.floor(h * dpr));
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    const count = Math.min(Math.max(Math.floor((w * h) / 11000), 34), 120);
+    bubbles = Array.from({ length: count }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.pow(Math.random(), 1.8) * 6.5 + 1,
+      rise: 0,
+      sp: 1 + Math.random() * 2.4,
+      ph: Math.random() * Math.PI * 2,
+      a: Math.random() * 0.4 + 0.3,
+      rvx: 0,
+      rvy: 0,
+    }));
+    for (const b of bubbles) {
+      // small fizz rises fastest; big bubbles drift slower
+      b.rise = Math.max(10, 30 + Math.random() * 55 + (5 - b.r) * 7);
+    }
+  };
+
+  const drawBubble = (b: (typeof bubbles)[number], t: number) => {
+    const cx = b.x + Math.cos(t * b.sp + b.ph) * b.r * 0.9;
+    // glassy highlight
+    ctx.globalAlpha = b.a * 0.85;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.beginPath();
+    ctx.arc(cx - b.r * 0.35, b.y - b.r * 0.35, Math.max(0.6, b.r * 0.22), 0, Math.PI * 2);
+    ctx.fill();
+    // crisp fizz rim
+    ctx.globalAlpha = b.a * 0.5;
+    ctx.strokeStyle = "#b8ffd4";
+    ctx.lineWidth = b.r > 3 ? 1.1 : 0.7;
+    ctx.beginPath();
+    ctx.arc(cx, b.y, b.r, 0, Math.PI * 2);
+    ctx.stroke();
+    // faint body
+    ctx.globalAlpha = b.a * 0.08;
+    ctx.fillStyle = "#9dffc2";
+    ctx.beginPath();
+    ctx.arc(cx, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  const drawOnce = () => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const t = 1.2;
+    for (const b of bubbles) drawBubble(b, t);
+    ctx.globalAlpha = 1;
+  };
+
+  const tick = (now: number) => {
+    // Pause while the section is off-screen; scroll restarts us.
+    const vr = canvas.getBoundingClientRect();
+    if (vr.bottom < -80 || vr.top > window.innerHeight + 80) {
+      raf = 0;
+      return;
+    }
+    if (!last) last = now;
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    const t = now / 1000;
+    // Ambient background: render every other frame
+    frameSkip = !frameSkip;
+    if (frameSkip) {
+      raf = requestAnimationFrame(tick);
+      return;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    // pointer position inside this section
+    let px = mx;
+    let py = my;
+    let rect: DOMRect | null = null;
+    if (mouseIn) {
+      rect = canvas.getBoundingClientRect();
+      px = mx - rect.left;
+      py = my - rect.top;
+    }
+
+    const damp = Math.exp(-dt * 2.6);
+
+    for (const b of bubbles) {
+      // natural upward fizz
+      b.y -= b.rise * dt;
+
+      // cursor repulsion: bubbles glide away from the pointer
+      if (mouseIn && rect) {
+        const dx = b.x - px;
+        const dy = b.y - py;
+        const dist2 = dx * dx + dy * dy;
+        const radius = 90 + b.r * 10;
+        if (dist2 < radius * radius && dist2 > 0.01) {
+          const dist = Math.sqrt(dist2);
+          const f = 1 - dist / radius;
+          const push = f * f * 2400 * dt;
+          b.rvx += (dx / dist) * push;
+          b.rvy += (dy / dist) * push;
+        }
+      }
+
+      b.rvx *= damp;
+      b.rvy *= damp;
+      const speed = Math.hypot(b.rvx, b.rvy);
+      const cap = 380;
+      if (speed > cap) {
+        b.rvx = (b.rvx / speed) * cap;
+        b.rvy = (b.rvy / speed) * cap;
+      }
+      b.x += b.rvx * dt;
+      b.y += b.rvy * dt;
+
+      if (b.y < -10) {
+        // resurface at the bottom like fresh carbonation
+        b.y = h + 10 + Math.random() * 40;
+        b.x = Math.random() * w;
+        b.rvx = 0;
+        b.rvy = 0;
+      }
+      if (b.x < -10) b.x = w + 10;
+      else if (b.x > w + 10) b.x = -10;
+
+      drawBubble(b, t);
+    }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(tick);
+  };
+
+  const onMove = (e: PointerEvent) => {
+    mx = e.clientX;
+    my = e.clientY;
+    mouseIn = true;
+  };
+  const onLeave = () => {
+    mouseIn = false;
+  };
+
+  const restart = () => {
+    if (!raf) raf = requestAnimationFrame(tick);
+  };
+  window.addEventListener("scroll", restart, { passive: true });
+
+  build();
+  if (reducedMotion) {
+    drawOnce();
+  } else {
+    document.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", onLeave, { passive: true });
+    raf = requestAnimationFrame(tick);
+  }
+  const onResize = () => {
+    build();
+    if (reducedMotion) drawOnce();
+  };
+  window.addEventListener("resize", onResize);
+  return () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("scroll", restart);
+    window.removeEventListener("resize", onResize);
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerleave", onLeave);
+  };
+}
+
 export default function Home() {
   const sectionRef = useRef<HTMLElement>(null);
   const nutritionRef = useRef<HTMLElement>(null);
@@ -374,7 +581,7 @@ export default function Home() {
   const aboutDisplayRef = useRef(0);
   const [aboutProgress, setAboutProgress] = useState(0);
   const [aboutLoaded, setAboutLoaded] = useState(0);
-  const starfieldRef = useRef<HTMLCanvasElement>(null);
+  const productsBubblesRef = useRef<HTMLCanvasElement>(null);
   const bubblesRef = useRef<HTMLCanvasElement>(null);
 
   // ---- Fourth section (strike can) scroll canvas ----
@@ -395,409 +602,21 @@ export default function Home() {
     return () => mediaQuery.removeEventListener("change", syncReducedMotion);
   }, []);
 
-  // ---- Products page: animated space background (drifting stars + nebulas + shooting stars) ----
+  // ---- Interactive soda-fizz bubble background (Products + Reviews) ----
+  // Bubbles float upward like carbonation and gently dodge away from the cursor.
   useEffect(() => {
-    const canvas = starfieldRef.current;
+    const canvas = productsBubblesRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    let stars: { x: number; y: number; r: number; a: number; sp: number; ph: number; g: boolean; vx: number; vy: number; dep: number }[] = [];
-    let w = 0;
-    let h = 0;
-    let raf = 0;
-    let frameSkip = false;
-    let lastScrollY = window.scrollY;
-
-    // drifting nebula glows (green tints)
-    const nebulas = [
-      { fx: 0.18, fy: 0.3, ampX: 40, ampY: 24, rad: 0.5, sp: 0.11, ph: 0, rgb: "57, 255, 136", al: 0.05 },
-      { fx: 0.8, fy: 0.2, ampX: 30, ampY: 34, rad: 0.4, sp: 0.08, ph: 2.1, rgb: "23, 140, 74", al: 0.06 },
-      { fx: 0.55, fy: 0.85, ampX: 60, ampY: 20, rad: 0.55, sp: 0.06, ph: 4.2, rgb: "16, 118, 62", al: 0.05 },
-    ];
-
-    // occasional shooting stars
-    let shooters: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }[] = [];
-    let nextShootAt = 1.5;
-
-    const build = () => {
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      w = parent.clientWidth;
-      h = parent.clientHeight;
-      canvas.width = Math.max(1, Math.floor(w * dpr));
-      canvas.height = Math.max(1, Math.floor(h * dpr));
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      const count = Math.min(Math.floor((w * h) / 8500), 240);
-      stars = Array.from({ length: count }, () => {
-        const big = Math.random() < 0.14;
-        return {
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: big ? Math.random() * 1.3 + 1.5 : Math.random() * 1.4 + 0.5,
-          a: Math.random() * 0.5 + 0.5,
-          sp: Math.random() * 2.4 + 1,
-          ph: Math.random() * Math.PI * 2,
-          g: Math.random() < 0.82,
-          vx: (Math.random() - 0.5) * 12,
-          vy: -(Math.random() * 22 + 6),
-          dep: Math.random() * 0.65 + 0.3,
-        };
-      });
-    };
-
-    const drawNebulas = (t: number) => {
-      for (const n of nebulas) {
-        const cx = w * n.fx + Math.sin(t * n.sp + n.ph) * n.ampX;
-        const cy = h * n.fy + Math.cos(t * n.sp * 1.3 + n.ph) * n.ampY;
-        const rad = h * n.rad;
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-        grad.addColorStop(0, `rgba(${n.rgb}, ${n.al})`);
-        grad.addColorStop(1, `rgba(${n.rgb}, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-
-    const spawnShooter = () => {
-      const fromLeft = Math.random() < 0.5;
-      const speed = 300 + Math.random() * 300;
-      const angle = (Math.PI / 4) * (0.6 + Math.random() * 0.8) * (fromLeft ? -1 : 1);
-      shooters.push({
-        x: fromLeft ? -40 : w + 40,
-        y: Math.random() * h * 0.4,
-        vx: Math.cos(angle) * speed * (fromLeft ? 1 : -1),
-        vy: Math.sin(angle) * speed,
-        life: 0,
-        maxLife: 1.4 + Math.random(),
-      });
-    };
-
-    const drawOnce = () => {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      drawNebulas(0.6);
-      for (const s of stars) {
-        ctx.globalAlpha = s.a;
-        ctx.fillStyle = s.g ? "#9dffc2" : "#ffffff";
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    };
-
-    const tick = (time: number) => {
-      // Pause while the products section is off-screen; scroll restarts us.
-      const vr = canvas.getBoundingClientRect();
-      if (vr.bottom < -80 || vr.top > window.innerHeight + 80) {
-        raf = 0;
-        return;
-      }
-      // Ambient background: render every other frame (30fps is plenty for a starfield)
-      frameSkip = !frameSkip;
-      if (frameSkip) {
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      const t = time / 1000;
-
-      drawNebulas(t);
-
-      // scroll velocity -> parallax: the sky slips past slower than the page (depth)
-      const sy = window.scrollY;
-      const dScroll = Math.max(-90, Math.min(90, sy - lastScrollY));
-      lastScrollY = sy;
-
-      for (const s of stars) {
-        // drift through space and wrap around the edges
-        s.x += s.vx * 0.016;
-        s.y += s.vy * 0.016;
-        s.y += dScroll * s.dep;
-        if (s.x < -3) s.x = w + 3;
-        else if (s.x > w + 3) s.x = -3;
-        if (s.y < -3) s.y = h + 3;
-        else if (s.y > h + 3) s.y = -3;
-
-        const tw = 0.5 + 0.5 * Math.sin(t * s.sp + s.ph);
-        const alpha = s.a * (0.2 + 0.8 * tw);
-        ctx.fillStyle = s.g ? "#9dffc2" : "#ffffff";
-        // soft glow halo only for the brighter stars (haloing all 300+ is the expensive part)
-        if (s.r > 1.6) {
-          ctx.globalAlpha = alpha * 0.22;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r * 3.4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalAlpha = alpha;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-
-      // shooting stars sweep across every so often
-      if (t > nextShootAt && shooters.length < 2) {
-        spawnShooter();
-        nextShootAt = t + 1.6 + Math.random() * 3.2;
-      }
-      shooters = shooters.filter((sh) => sh.life < sh.maxLife);
-      for (const sh of shooters) {
-        sh.life += 0.016;
-        sh.x += sh.vx * 0.016;
-        sh.y += sh.vy * 0.016;
-        const fade = Math.max(0, 1 - sh.life / sh.maxLife);
-        const tailX = sh.x - sh.vx * 0.09;
-        const tailY = sh.y - sh.vy * 0.09;
-        const grad = ctx.createLinearGradient(tailX, tailY, sh.x, sh.y);
-        grad.addColorStop(0, `rgba(157, 255, 194, 0)`);
-        grad.addColorStop(1, `rgba(225, 255, 238, ${0.9 * fade})`);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.6;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(tailX, tailY);
-        ctx.lineTo(sh.x, sh.y);
-        ctx.stroke();
-      }
-
-      raf = requestAnimationFrame(tick);
-    };
-
-    const restart = () => {
-      if (!raf) raf = requestAnimationFrame(tick);
-    };
-    window.addEventListener("scroll", restart, { passive: true });
-
-    build();
-    if (reducedMotion) {
-      drawOnce();
-    } else {
-      raf = requestAnimationFrame(tick);
-    }
-    const onResize = () => {
-      build();
-      if (reducedMotion) drawOnce();
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", restart);
-      window.removeEventListener("resize", onResize);
-    };
+    return runBubbleCanvas(canvas, reducedMotion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion]);
 
-  // ---- Customer reviews page: interactive soda-fizz bubble background ----
-  // Bubbles float upward like carbonation and gently dodge away from the cursor.
   useEffect(() => {
     const canvas = bubblesRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    let w = 0;
-    let h = 0;
-    let raf = 0;
-    let last = 0;
-    let frameSkip = false;
-    let mx = -1e4;
-    let my = -1e4;
-    let mouseIn = false;
-
-    let bubbles: {
-      x: number;
-      y: number;
-      r: number;
-      rise: number;
-      sp: number;
-      ph: number;
-      a: number;
-      rvx: number;
-      rvy: number;
-    }[] = [];
-
-    const build = () => {
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      w = parent.clientWidth;
-      h = parent.clientHeight;
-      canvas.width = Math.max(1, Math.floor(w * dpr));
-      canvas.height = Math.max(1, Math.floor(h * dpr));
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      const count = Math.min(Math.max(Math.floor((w * h) / 11000), 34), 120);
-      bubbles = Array.from({ length: count }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: Math.pow(Math.random(), 1.8) * 6.5 + 1,
-        rise: 0,
-        sp: 1 + Math.random() * 2.4,
-        ph: Math.random() * Math.PI * 2,
-        a: Math.random() * 0.4 + 0.3,
-        rvx: 0,
-        rvy: 0,
-      }));
-      for (const b of bubbles) {
-        // small fizz rises fastest; big bubbles drift slower
-        b.rise = Math.max(10, 30 + Math.random() * 55 + (5 - b.r) * 7);
-      }
-    };
-
-    const drawBubble = (
-      b: (typeof bubbles)[number],
-      t: number,
-    ) => {
-      const cx = b.x + Math.cos(t * b.sp + b.ph) * b.r * 0.9;
-      // glassy highlight
-      ctx.globalAlpha = b.a * 0.85;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.beginPath();
-      ctx.arc(cx - b.r * 0.35, b.y - b.r * 0.35, Math.max(0.6, b.r * 0.22), 0, Math.PI * 2);
-      ctx.fill();
-      // crisp fizz rim
-      ctx.globalAlpha = b.a * 0.5;
-      ctx.strokeStyle = "#b8ffd4";
-      ctx.lineWidth = b.r > 3 ? 1.1 : 0.7;
-      ctx.beginPath();
-      ctx.arc(cx, b.y, b.r, 0, Math.PI * 2);
-      ctx.stroke();
-      // faint body
-      ctx.globalAlpha = b.a * 0.08;
-      ctx.fillStyle = "#9dffc2";
-      ctx.beginPath();
-      ctx.arc(cx, b.y, b.r, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    const drawOnce = () => {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      const t = 1.2;
-      for (const b of bubbles) drawBubble(b, t);
-      ctx.globalAlpha = 1;
-    };
-
-    const tick = (now: number) => {
-      // Pause while the reviews section is off-screen; scroll restarts us.
-      const vr = canvas.getBoundingClientRect();
-      if (vr.bottom < -80 || vr.top > window.innerHeight + 80) {
-        raf = 0;
-        return;
-      }
-      if (!last) last = now;
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      const t = now / 1000;
-      // Ambient background: render every other frame
-      frameSkip = !frameSkip;
-      if (frameSkip) {
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-
-      // pointer position inside this section
-      let px = mx;
-      let py = my;
-      let rect: DOMRect | null = null;
-      if (mouseIn) {
-        rect = canvas.getBoundingClientRect();
-        px = mx - rect.left;
-        py = my - rect.top;
-      }
-
-      const damp = Math.exp(-dt * 2.6);
-
-      for (const b of bubbles) {
-        // natural upward fizz
-        b.y -= b.rise * dt;
-
-        // cursor repulsion: bubbles glide away from the pointer
-        if (mouseIn && rect) {
-          const dx = b.x - px;
-          const dy = b.y - py;
-          const dist2 = dx * dx + dy * dy;
-          const radius = 90 + b.r * 10;
-          if (dist2 < radius * radius && dist2 > 0.01) {
-            const dist = Math.sqrt(dist2);
-            const f = 1 - dist / radius;
-            const push = f * f * 2400 * dt;
-            b.rvx += (dx / dist) * push;
-            b.rvy += (dy / dist) * push;
-          }
-        }
-
-        b.rvx *= damp;
-        b.rvy *= damp;
-        const speed = Math.hypot(b.rvx, b.rvy);
-        const cap = 380;
-        if (speed > cap) {
-          b.rvx = (b.rvx / speed) * cap;
-          b.rvy = (b.rvy / speed) * cap;
-        }
-        b.x += b.rvx * dt;
-        b.y += b.rvy * dt;
-
-        if (b.y < -10) {
-          // resurface at the bottom like fresh carbonation
-          b.y = h + 10 + Math.random() * 40;
-          b.x = Math.random() * w;
-          b.rvx = 0;
-          b.rvy = 0;
-        }
-        if (b.x < -10) b.x = w + 10;
-        else if (b.x > w + 10) b.x = -10;
-
-        drawBubble(b, t);
-      }
-      ctx.globalAlpha = 1;
-      raf = requestAnimationFrame(tick);
-    };
-
-    const onMove = (e: PointerEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-      mouseIn = true;
-    };
-    const onLeave = () => {
-      mouseIn = false;
-    };
-
-    const restart = () => {
-      if (!raf) raf = requestAnimationFrame(tick);
-    };
-    window.addEventListener("scroll", restart, { passive: true });
-
-    build();
-    if (reducedMotion) {
-      drawOnce();
-    } else {
-      document.addEventListener("pointermove", onMove, { passive: true });
-      document.addEventListener("pointerleave", onLeave, { passive: true });
-      raf = requestAnimationFrame(tick);
-    }
-    const onResize = () => {
-      build();
-      if (reducedMotion) drawOnce();
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", restart);
-      window.removeEventListener("resize", onResize);
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerleave", onLeave);
-    };
+    return runBubbleCanvas(canvas, reducedMotion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion]);
-
   // ---- Track scroll for navbar shape: pill when scrolled past hero ----
   useEffect(() => {
     const handleScroll = () => {
@@ -1167,11 +986,13 @@ export default function Home() {
     const canvas = canvasRef.current;
     const section = sectionRef.current;
     if (!canvas || !section) return;
+    let lastHeroDrawn = -1;
+    let lastHeroPct = -1;
 
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) return;
     context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
+    context.imageSmoothingQuality = "medium";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1190,14 +1011,18 @@ export default function Home() {
         : displayedProgressRef.current + difference * 0.11;
       const nextProgress = displayedProgressRef.current;
 
-      if (Math.abs(difference) > 0.0005 || reducedMotion) {
-        setProgress(nextProgress);
-      }
-
       const frameIndex = Math.round(nextProgress * (FRAME_SOURCES.length - 1));
+      const pct = Math.round(nextProgress * 100);
+      if (pct !== lastHeroPct) {
+        lastHeroPct = pct;
+        if (Math.abs(difference) > 0.0005 || reducedMotion) {
+          setProgress(nextProgress);
+        }
+      }
       const image = frameImagesRef.current[frameIndex] ?? frameImagesRef.current[0];
+      let drew = false;
       if (image && image.naturalWidth > 0) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const width = window.innerWidth;
         const height = window.innerHeight;
         const pixelWidth = Math.floor(width * dpr);
@@ -1219,8 +1044,13 @@ export default function Home() {
         const drawX = (width - drawWidth) / 2;
         const drawY = (height - drawHeight) / 2;
         context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+        drew = true;
       }
-
+      if (drew && Math.abs(difference) <= 0.0005 && frameIndex === lastHeroDrawn) {
+        rafRef.current = null;
+        return;
+      }
+      lastHeroDrawn = frameIndex;
       rafRef.current = window.requestAnimationFrame(render);
     };
 
@@ -1248,10 +1078,12 @@ export default function Home() {
     const canvas = sec2CanvasRef.current;
     const section = nutritionSectionRef.current;
     if (!canvas || !section) return;
+    let lastSec2Drawn = -1;
+    let lastSec2Pct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingQuality = "medium";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1266,12 +1098,17 @@ export default function Home() {
       const diff = sec2TargetRef.current - sec2DisplayRef.current;
       sec2DisplayRef.current += diff * 0.11;
       const p = sec2DisplayRef.current;
-      if (Math.abs(diff) > 0.0005) setSec2Progress(p);
+      const pct = Math.round(p * 100);
+      if (pct !== lastSec2Pct) {
+        lastSec2Pct = pct;
+        if (Math.abs(diff) > 0.0005) setSec2Progress(p);
+      }
 
       const idx = Math.round(p * (SECTION2_FRAME_SOURCES.length - 1));
       const img = sec2FrameImagesRef.current[idx] ?? sec2FrameImagesRef.current[0];
+      let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1289,7 +1126,13 @@ export default function Home() {
         const dw = img.naturalWidth * scale;
         const dh = img.naturalHeight * scale;
         ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        drew = true;
       }
+      if (drew && Math.abs(diff) <= 0.0005 && idx === lastSec2Drawn) {
+        sec2RafRef.current = null;
+        return;
+      }
+      lastSec2Drawn = idx;
       sec2RafRef.current = requestAnimationFrame(render);
     };
 
@@ -1312,10 +1155,12 @@ export default function Home() {
     const canvas = aboutCanvasRef.current;
     const section = aboutSectionRef.current;
     if (!canvas || !section) return;
+    let lastAboutDrawn = -1;
+    let lastAboutPct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingQuality = "medium";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1330,12 +1175,17 @@ export default function Home() {
       const diff = aboutTargetRef.current - aboutDisplayRef.current;
       aboutDisplayRef.current += diff * 0.11;
       const p = aboutDisplayRef.current;
-      if (Math.abs(diff) > 0.0005) setAboutProgress(p);
+      const pct = Math.round(p * 100);
+      if (pct !== lastAboutPct) {
+        lastAboutPct = pct;
+        if (Math.abs(diff) > 0.0005) setAboutProgress(p);
+      }
 
       const idx = Math.round(p * (ABOUT_FRAME_SOURCES.length - 1));
       const img = aboutFrameImagesRef.current[idx] ?? aboutFrameImagesRef.current[0];
+      let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1353,7 +1203,13 @@ export default function Home() {
         const dw = img.naturalWidth * scale;
         const dh = img.naturalHeight * scale;
         ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        drew = true;
       }
+      if (drew && Math.abs(diff) <= 0.0005 && idx === lastAboutDrawn) {
+        aboutRafRef.current = null;
+        return;
+      }
+      lastAboutDrawn = idx;
       aboutRafRef.current = requestAnimationFrame(render);
     };
 
@@ -1376,10 +1232,12 @@ export default function Home() {
     const canvas = strikeCanvasRef.current;
     const section = strikeSectionRef.current;
     if (!canvas || !section) return;
+    let lastStrikeDrawn = -1;
+    let lastStrikePct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingQuality = "medium";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1394,12 +1252,17 @@ export default function Home() {
       const diff = strikeTargetRef.current - strikeDisplayRef.current;
       strikeDisplayRef.current += diff * 0.11;
       const p = strikeDisplayRef.current;
-      if (Math.abs(diff) > 0.0005) setStrikeProgress(p);
+      const pct = Math.round(p * 100);
+      if (pct !== lastStrikePct) {
+        lastStrikePct = pct;
+        if (Math.abs(diff) > 0.0005) setStrikeProgress(p);
+      }
 
       const idx = Math.round(p * (STRIKE_FRAME_SOURCES.length - 1));
       const img = strikeFrameImagesRef.current[idx] ?? strikeFrameImagesRef.current[0];
+      let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1417,7 +1280,13 @@ export default function Home() {
         const dw = img.naturalWidth * scale;
         const dh = img.naturalHeight * scale;
         ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        drew = true;
       }
+      if (drew && Math.abs(diff) <= 0.0005 && idx === lastStrikeDrawn) {
+        strikeRafRef.current = null;
+        return;
+      }
+      lastStrikeDrawn = idx;
       strikeRafRef.current = requestAnimationFrame(render);
     };
 
@@ -1805,9 +1674,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Products page: liquid-glass cards over a green starfield */}
+      {/* Products page: liquid-glass cards over interactive soda-fizz bubbles */}
       <section id="products" className="volt-products" aria-label="Volt products to buy">
-        <canvas ref={starfieldRef} className="volt-starfield" aria-hidden="true" />
+        <canvas ref={productsBubblesRef} className="volt-bubbles" aria-hidden="true" />
         <div className="volt-products-inner">
           <header className="volt-products-head volt-reveal">
             <p className="volt-eyebrow"><span /> Volt strike energy</p>
@@ -2091,6 +1960,9 @@ export default function Home() {
       </footer>
 
       <LiquidTransition ref={liqRef} />
+
+      {/* Floating AI support assistant */}
+      <SupportChat />
     </main>
   );
 }
