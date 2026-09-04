@@ -1667,10 +1667,6 @@ export default function Home() {
             className="volt-ingredients-heading"
           />
           <p className="volt-ingredients-sub">The story behind the charge</p>
-          <a href="#strike" className="volt-about-cta volt-nav-link" aria-label="Explore the Volt flavors">
-            Explore flavors
-            <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
-          </a>
           <ArrowDown size={18} strokeWidth={1.8} className="volt-ingredients-arrow" />
         </div>
       </section>
@@ -1705,6 +1701,12 @@ export default function Home() {
               and made to keep the current alive.
             </p>
           </div>
+
+          {/* CTA to the next page — Flavors */}
+          <a href="#strike" className="volt-about-cta volt-about-film-cta volt-nav-link" aria-label="Continue to the Volt flavors">
+            Explore flavors
+            <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+          </a>
 
           {/* Bottom bar */}
           <div className="volt-bottom-bar">

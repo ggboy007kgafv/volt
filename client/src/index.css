@@ -597,8 +597,19 @@ a:focus-visible {
     0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
-.volt-about-intro .volt-about-cta {
-  margin-top: 1.6rem;
+/* CTA on the Fueled-by-Volt film page — pinned above the status bar */
+.volt-about-film-cta {
+  position: absolute;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  z-index: 4;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.volt-about-film-cta:hover {
+  transform: translateX(-50%) translateY(-2px);
 }
 
 @media (max-width: 640px) {
