@@ -7,8 +7,8 @@
  * slightly below its middle — Active Theory style — with a slow idle spin
  * so the can always feels alive.
  */
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import * as THREE from "three";
@@ -20,48 +20,81 @@ const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 const deg = (d: number) => (d * Math.PI) / 180;
 
 /* ------------------------------------------------------------------ */
-/* The can                                                             */
+/* Can model loading (streamed, with progress + error handling)        */
 /* ------------------------------------------------------------------ */
-function CanModel({ onReady }: { onReady: () => void }) {
-  const gltf = useLoader(GLTFLoader, CAN_URL);
-  const done = useRef(false);
 
-  useMemo(() => {
-    const scene = gltf.scene;
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = box.getSize(new THREE.Vector3());
-    const scale = 2.75 / Math.max(size.y, 1e-5);
-    const midY = box.getCenter(new THREE.Vector3()).y * scale;
-    scene.scale.setScalar(scale);
-    scene.position.y = -midY;
-    scene.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (mesh.isMesh) {
-        const mat = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
-        const mats = Array.isArray(mat) ? mat : [mat];
-        mats.forEach((m) => {
-          if (m && m.isMaterial) {
-            m.metalness = Math.min(m.metalness ?? 0, 0.5);
-            m.roughness = THREE.MathUtils.clamp(m.roughness ?? 1, 0.15, 0.9);
-            m.envMapIntensity = 1.5;
-          }
-        });
-      }
-    });
-  }, [gltf]);
-
-  useEffect(() => {
-    if (done.current) return;
-    done.current = true;
-    const t = window.setTimeout(onReady, 80);
-    return () => window.clearTimeout(t);
-  }, [onReady]);
-
-  return <primitive object={gltf.scene} />;
+// Normalize size/center and tune materials so the can sits nicely on stage.
+function poseCan(scene: THREE.Group) {
+  const box = new THREE.Box3().setFromObject(scene);
+  const size = box.getSize(new THREE.Vector3());
+  const scale = 2.75 / Math.max(size.y, 1e-5);
+  const midY = box.getCenter(new THREE.Vector3()).y * scale;
+  scene.scale.setScalar(scale);
+  scene.position.y = -midY;
+  scene.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (mesh.isMesh) {
+      const mat = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
+      const mats = Array.isArray(mat) ? mat : [mat];
+      mats.forEach((m) => {
+        if (m && m.isMaterial) {
+          m.metalness = Math.min(m.metalness ?? 0, 0.5);
+          m.roughness = THREE.MathUtils.clamp(m.roughness ?? 1, 0.15, 0.9);
+          m.envMapIntensity = 1.5;
+        }
+      });
+    }
+  });
+  return scene;
 }
 
-/* Slow idle spin + gentle float so the can never looks static */
-function CanRig({ onReady }: { onReady: () => void }) {
+// Fetch the GLB ourselves (instead of useLoader/Suspense) so we can report a
+// real % while a 42MB file streams in, and surface failures as a Retry state
+// rather than silently hanging on "Zooming to the can".
+async function loadCan(onPct: (pct: number) => void): Promise<THREE.Group> {
+  const res = await fetch(CAN_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const total = Number(res.headers.get("content-length")) || 0;
+  let data: ArrayBuffer;
+  if (res.body && total > 0) {
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let received = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        received += value.length;
+        onPct(Math.min(99, Math.round((received / total) * 100)));
+      }
+    }
+    const merged = new Uint8Array(received);
+    let offset = 0;
+    for (const c of chunks) {
+      merged.set(c, offset);
+      offset += c.length;
+    }
+    data = merged.buffer;
+  } else {
+    data = await res.arrayBuffer();
+  }
+  const gltf = await new Promise<THREE.Group>((resolve, reject) => {
+    new GLTFLoader().parse(
+      data,
+      "",
+      (g) => resolve(g.scene),
+      (err) => reject(err instanceof Error ? err : new Error(String(err))),
+    );
+  });
+  onPct(100);
+  return poseCan(gltf);
+}
+
+/* ------------------------------------------------------------------ */
+/* The can — idle spin + gentle float so it never looks static        */
+/* ------------------------------------------------------------------ */
+function CanRig({ model }: { model: THREE.Group | null }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     const g = ref.current;
@@ -71,11 +104,7 @@ function CanRig({ onReady }: { onReady: () => void }) {
     g.rotation.z = Math.sin(t * 0.5) * 0.02;
     g.position.y = Math.sin(t * 0.8) * 0.05;
   });
-  return (
-    <group ref={ref}>
-      <CanModel onReady={onReady} />
-    </group>
-  );
+  return <group ref={ref}>{model ? <primitive object={model} /> : null}</group>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -169,10 +198,10 @@ function Particles() {
 /* ------------------------------------------------------------------ */
 function Scene({
   progressRef,
-  onCanReady,
+  model,
 }: {
   progressRef: React.RefObject<number>;
-  onCanReady: () => void;
+  model: THREE.Group | null;
 }) {
   const { gl, scene } = useThree();
 
@@ -195,9 +224,7 @@ function Scene({
       <directionalLight position={[6, 8, 4]} intensity={1.7} color="#eafff4" />
       <directionalLight position={[-7, 3, -5]} intensity={0.7} color="#7dffa8" />
       <spotLight position={[0, 9, -5]} intensity={0.6} angle={0.55} penumbra={1} color="#9dffc2" />
-      <Suspense fallback={null}>
-        <CanRig onReady={onCanReady} />
-      </Suspense>
+      <CanRig model={model} />
       <Particles />
       <OrbitCam progressRef={progressRef} />
     </>
@@ -219,18 +246,43 @@ interface AboutExperienceProps {
 export default function AboutExperience({ overlay = false, scrollRef, onProgress }: AboutExperienceProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const progressRef = useRef(0);
-  const [canReady, setCanReady] = useState(false);
   const [pct, setPct] = useState(0);
   const pctShown = useRef(-1);
   const rafRef = useRef<number | null>(null);
   const [active, setActive] = useState(overlay);
-  const readyRef = useRef(false);
 
-  const onCanReady = useCallback(() => {
-    if (readyRef.current) return;
-    readyRef.current = true;
-    setCanReady(true);
-  }, []);
+  // Can-model load lifecycle: streamed fetch with % progress, and a Retry
+  // action on failure — never a silent endless "loading" hang.
+  const [model, setModel] = useState<THREE.Group | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
+  const [loadPct, setLoadPct] = useState(0);
+  const [loadErr, setLoadErr] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    setLoadState("loading");
+    setLoadPct(0);
+    setLoadErr("");
+    loadCan((pct) => {
+      if (!cancelled) setLoadPct(pct);
+    })
+      .then((scene) => {
+        if (cancelled) return;
+        setModel(scene);
+        setLoadState("ready");
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setLoadErr(err instanceof Error ? err.message : String(err));
+        setLoadState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, loadAttempt]);
 
   // Inline mode: mount the WebGL canvas only while the section is near the
   // viewport. Overlay mode is always active because it only exists while open.
@@ -303,23 +355,50 @@ export default function AboutExperience({ overlay = false, scrollRef, onProgress
             gl={{ antialias: true, powerPreference: "high-performance" }}
             className="volt-exp-canvas"
           >
-            <Scene progressRef={progressRef} onCanReady={onCanReady} />
+            <Scene progressRef={progressRef} model={model} />
           </Canvas>
         )}
 
         <div className="volt-vignette" aria-hidden="true" />
         <div className="volt-grain" aria-hidden="true" />
 
-        {active && !canReady && (
+        {active && loadState === "loading" && (
           <div className="volt-exp-loading" role="status">
             <span className="volt-exp-loading-dot" />
-            <span>Zooming to the can</span>
+            <span>
+              {loadPct > 0 ? `Loading the can — ${loadPct}%` : "Zooming to the can"}
+            </span>
+          </div>
+        )}
+
+        {active && loadState === "error" && (
+          <div className="volt-exp-loading volt-exp-loading--error" role="alert">
+            <span>
+              Couldn't load the 3D can{loadErr ? ` — ${loadErr}` : ""}
+            </span>
+            <button
+              type="button"
+              className="volt-exp-retry"
+              onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            >
+              Try again
+            </button>
           </div>
         )}
 
         {active && (
           <div className="volt-exp-bottom volt-bottom-bar">
-            <span>{canReady ? (pct < 2 ? "Spin the can — keep scrolling" : "Volt · 360°") : "Zooming to the can"}</span>
+            <span>
+              {loadState === "ready"
+                ? pct < 2
+                  ? "Spin the can — keep scrolling"
+                  : "Volt · 360°"
+                : loadState === "error"
+                  ? "Couldn't load the can"
+                  : loadPct > 0
+                    ? `Loading the can — ${loadPct}%`
+                    : "Zooming to the can"}
+            </span>
             <span className="volt-bottom-line" />
             <span>{String(Math.max(1, Math.min(100, pct + 1))).padStart(3, "0")} / 100</span>
           </div>

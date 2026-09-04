@@ -49,6 +49,41 @@
   text-shadow: 0 1px 18px rgba(0, 0, 0, 0.8);
 }
 
+.volt-exp-loading--error {
+  flex-direction: column;
+  gap: 18px;
+  pointer-events: auto;
+  color: #ffb9b9;
+}
+
+.volt-exp-loading--error span:first-child {
+  max-width: min(78vw, 460px);
+  text-align: center;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+.volt-exp-retry {
+  appearance: none;
+  border: 1px solid rgba(157, 255, 194, 0.5);
+  border-radius: 100px;
+  padding: 11px 26px;
+  background: rgba(8, 30, 18, 0.7);
+  color: #a7ffc9;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.volt-exp-retry:hover {
+  background: rgba(28, 78, 46, 0.8);
+  border-color: #39ff88;
+  box-shadow: 0 0 26px -6px rgba(57, 255, 136, 0.75);
+}
+
 .volt-exp-loading-dot {
   width: 9px;
   height: 9px;

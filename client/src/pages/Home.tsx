@@ -459,6 +459,9 @@ export default function Home() {
   const [soundOn, setSoundOn] = useState(false);
   const liqRef = useRef<LiquidTransitionHandle>(null);
   const lerpStopRef = useRef<(() => void) | null>(null);
+  // Set while the 360 viewer overlay is open so the cinematic wheel-lerp
+  // stands down and the overlay's own scroller receives native wheel input.
+  const expOpenRef = useRef(false);
   const [loadedFrames, setLoadedFrames] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [nutritionVisible, setNutritionVisible] = useState(false);
@@ -733,6 +736,10 @@ export default function Home() {
     lerpStopRef.current = stop;
 
     const onWheel = (e: WheelEvent) => {
+      // While the 360 viewer overlay is open it owns its own internal
+      // scroller — let the browser handle wheel input natively so the
+      // orbit actually spins.
+      if (expOpenRef.current) return;
       e.preventDefault();
       targetY += e.deltaY;
       targetY = Math.min(Math.max(targetY, 0), maxScroll());
@@ -1402,16 +1409,22 @@ export default function Home() {
 
   const open360 = () => {
     expRestoreY.current = window.scrollY;
+    lerpStopRef.current?.(); // don't let a mid-flight glide fight the overlay
     const liq = liqRef.current;
     if (liq) {
-      liq.play(() => setExpOpen(true), () => {});
+      liq.play(() => {
+        expOpenRef.current = true;
+        setExpOpen(true);
+      }, () => {});
     } else {
+      expOpenRef.current = true;
       setExpOpen(true);
     }
   };
 
   const close360 = (restore = true) => {
     setExpOpen(false);
+    expOpenRef.current = false;
     if (restore) {
       window.requestAnimationFrame(() => {
         window.scrollTo({ top: expRestoreY.current, behavior: "instant" as ScrollBehavior });
