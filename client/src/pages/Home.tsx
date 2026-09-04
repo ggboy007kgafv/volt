@@ -1481,12 +1481,6 @@ export default function Home() {
     return runBubbleCanvas(canvas, reducedMotion, bubbleActivityRef);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expEnded, reducedMotion]);
-  const openSupportFromMenu = () => {
-    close360(true);
-    window.requestAnimationFrame(() => {
-      window.dispatchEvent(new CustomEvent("volt:open-support"));
-    });
-  };
 
   // Lock the page while the viewer is open; Escape closes it.
   useEffect(() => {
@@ -2168,31 +2162,21 @@ export default function Home() {
 
           {/* End-of-orbit destination menu */}
           {expEnded && (
-            <div className="volt-menu-screen" role="dialog" aria-modal="true" aria-label="What are you looking for">
+            <div className="volt-menu-screen" role="dialog" aria-modal="true" aria-label="Choose a destination">
               <canvas ref={menuBubblesRef} className="volt-bubbles" aria-hidden="true" />
               <div className="volt-grain" aria-hidden="true" />
               <div className="volt-menu-inner">
-                <p className="volt-menu-heading">What are you looking for?</p>
                 <nav className="volt-menu-list" aria-label="Choose a destination">
-                  <a href="#strike" className="volt-nav-link volt-menu-opt" style={{ "--i": 0 } as React.CSSProperties} onClick={close360ForNav}>
-                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Flavors
+                  <a href="#about" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Factory
                   </a>
-                  <a href="#about" className="volt-nav-link volt-menu-opt" style={{ "--i": 1 } as React.CSSProperties} onClick={close360ForNav}>
-                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Our Story
+                  <a href="#strike" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Stock
                   </a>
-                  <a href="#nutrition" className="volt-nav-link volt-menu-opt" style={{ "--i": 2 } as React.CSSProperties} onClick={close360ForNav}>
-                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Nutrition
-                  </a>
-                  <a href="#products" className="volt-nav-link volt-menu-opt" style={{ "--i": 3 } as React.CSSProperties} onClick={close360ForNav}>
-                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Products
-                  </a>
-                  <a href="#reviews" className="volt-nav-link volt-menu-opt" style={{ "--i": 4 } as React.CSSProperties} onClick={close360ForNav}>
-                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Reviews
+                  <a href="#products" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Sales
                   </a>
                 </nav>
-                <button type="button" className="volt-menu-ask" onClick={openSupportFromMenu}>
-                  Ask me anything...
-                </button>
               </div>
             </div>
           )}
