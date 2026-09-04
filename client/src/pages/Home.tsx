@@ -16,6 +16,7 @@ import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
 import { VOLT_FRAME_SOURCES } from "@/lib/voltFrameSources";
 import { ABOUT_FRAME_SOURCES } from "@/lib/aboutFrameSources";
 import { STRIKE_FRAME_SOURCES } from "@/lib/strikeFrameSources";
+import { FACTORY_FRAME_SOURCES } from "@/lib/factoryFrameSources";
 
 const FRAME_SOURCES = VOLT_FRAME_SOURCES;
 
@@ -607,6 +608,16 @@ export default function Home() {
   const [strikeProgress, setStrikeProgress] = useState(0);
   const [strikeLoaded, setStrikeLoaded] = useState(0);
 
+  // ---- Factory scroll-canvas sequence ----
+  const factorySectionRef = useRef<HTMLElement>(null);
+  const factoryCanvasRef = useRef<HTMLCanvasElement>(null);
+  const factoryFrameImagesRef = useRef<(HTMLImageElement | null)[]>([]);
+  const factoryRafRef = useRef<number | null>(null);
+  const factoryTargetRef = useRef(0);
+  const factoryDisplayRef = useRef(0);
+  const [factoryProgress, setFactoryProgress] = useState(0);
+  const [factoryLoaded, setFactoryLoaded] = useState(0);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncReducedMotion = () => setReducedMotion(mediaQuery.matches);
@@ -889,6 +900,7 @@ export default function Home() {
   const sec2Near = useNearViewport(nutritionSectionRef);
   const aboutNear = useNearViewport(aboutSectionRef);
   const strikeNear = useNearViewport(strikeSectionRef);
+  const factoryNear = useNearViewport(factorySectionRef);
 
   // ---- Load second-section frames (deferred until the section nears the viewport) ----
   useEffect(() => {
@@ -1045,6 +1057,58 @@ export default function Home() {
       });
     };
   }, [strikeNear]);
+
+  // ---- Load factory frames (deferred until the section nears the viewport) ----
+  useEffect(() => {
+    if (!factoryNear) return;
+    let cancelled = false;
+    let nextBatchTimer: number | undefined;
+    const images: (HTMLImageElement | null)[] = FACTORY_FRAME_SOURCES.map(() => null);
+    factoryFrameImagesRef.current = images;
+
+    const loadFrame = (index: number) => {
+      if (cancelled || images[index]) return;
+      const image = new Image();
+      image.decoding = "async";
+      image.fetchPriority = index === 0 ? "high" : "low";
+      image.onload = () => {
+        if (cancelled) return;
+        images[index] = image;
+        factoryFrameImagesRef.current[index] = image;
+        setFactoryLoaded((c) => c + 1);
+      };
+      image.onerror = () => {
+        if (!cancelled && index !== 0) {
+          images[index] = images[0];
+          factoryFrameImagesRef.current[index] = images[0];
+        }
+      };
+      image.src = FACTORY_FRAME_SOURCES[index];
+    };
+
+    loadFrame(0);
+    let batchStart = 1;
+    const loadNextBatch = () => {
+      const batchEnd = Math.min(batchStart + 14, FACTORY_FRAME_SOURCES.length);
+      for (let i = batchStart; i < batchEnd; i += 1) loadFrame(i);
+      batchStart = batchEnd;
+      if (batchStart < FACTORY_FRAME_SOURCES.length) {
+        nextBatchTimer = window.setTimeout(loadNextBatch, 80);
+      }
+    };
+    nextBatchTimer = window.setTimeout(loadNextBatch, 80);
+
+    return () => {
+      cancelled = true;
+      if (nextBatchTimer) window.clearTimeout(nextBatchTimer);
+      images.forEach((img) => {
+        if (img) {
+          img.onload = null;
+          img.onerror = null;
+        }
+      });
+    };
+  }, [factoryNear]);
 
   // ---- Hero canvas render loop ----
   useEffect(() => {
@@ -1369,6 +1433,83 @@ export default function Home() {
     };
   }, []);
 
+  // ---- Factory canvas render loop ----
+  useEffect(() => {
+    const canvas = factoryCanvasRef.current;
+    const section = factorySectionRef.current;
+    if (!canvas || !section) return;
+    let lastFactoryDrawn = -1;
+    let lastFactoryPct = -1;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const render = () => {
+      const rect = section.getBoundingClientRect();
+      // Pause when far off-screen — the scroll listener restarts us on the way back.
+      if (rect.bottom < -160 || rect.top > window.innerHeight + 160) {
+        factoryRafRef.current = null;
+        return;
+      }
+      const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
+      const raw = clamp(-rect.top / scrollable, 0, 1);
+      factoryTargetRef.current = raw;
+      const diff = factoryTargetRef.current - factoryDisplayRef.current;
+      factoryDisplayRef.current += diff * 0.11;
+      const p = factoryDisplayRef.current;
+      const pct = Math.round(p * 100);
+      if (pct !== lastFactoryPct) {
+        lastFactoryPct = pct;
+        if (Math.abs(diff) > 0.0005) setFactoryProgress(p);
+      }
+
+      const idx = Math.round(p * (FACTORY_FRAME_SOURCES.length - 1));
+      const img = factoryFrameImagesRef.current[idx] ?? factoryFrameImagesRef.current[0];
+      let drew = false;
+      if (img && img.naturalWidth > 0) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.parentElement?.clientWidth ?? 400;
+        const h = canvas.parentElement?.clientHeight ?? 600;
+        const pw = Math.floor(w * dpr);
+        const ph = Math.floor(h * dpr);
+        if (canvas.width !== pw || canvas.height !== ph) {
+          canvas.width = pw;
+          canvas.height = ph;
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = "#07150f";
+        ctx.fillRect(0, 0, w, h);
+        const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        const dw = img.naturalWidth * scale;
+        const dh = img.naturalHeight * scale;
+        ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        drew = true;
+      }
+      if (drew && Math.abs(diff) <= 0.0005 && idx === lastFactoryDrawn) {
+        factoryRafRef.current = null;
+        return;
+      }
+      lastFactoryDrawn = idx;
+      factoryRafRef.current = requestAnimationFrame(render);
+    };
+
+    const onScroll = () => {
+      if (factoryRafRef.current === null) factoryRafRef.current = requestAnimationFrame(render);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    factoryRafRef.current = requestAnimationFrame(render);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (factoryRafRef.current !== null) cancelAnimationFrame(factoryRafRef.current);
+      factoryRafRef.current = null;
+    };
+  }, []);
+
   const copyOpacity = 1 - clamp(progress / 0.3, 0, 1);
   const progressPercent = Math.round(progress * 100);
   const frameNumber = String(Math.min(FRAME_SOURCES.length, Math.max(1, Math.round(progress * (FRAME_SOURCES.length - 1)) + 1))).padStart(3, "0");
@@ -1383,6 +1524,10 @@ export default function Home() {
 
   const strikeFrameNumber = String(
     Math.min(STRIKE_FRAME_SOURCES.length, Math.max(1, Math.round(strikeProgress * (STRIKE_FRAME_SOURCES.length - 1)) + 1)),
+  ).padStart(3, "0");
+
+  const factoryFrameNumber = String(
+    Math.min(FACTORY_FRAME_SOURCES.length, Math.max(1, Math.round(factoryProgress * (FACTORY_FRAME_SOURCES.length - 1)) + 1)),
   ).padStart(3, "0");
 
   const spawnParticles = (centerX: number, centerY: number) => {
@@ -1829,6 +1974,38 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Factory scroll-canvas sequence */}
+      <section
+        ref={(el) => {
+          (factorySectionRef as MutableRefObject<HTMLElement | null>).current = el;
+        }}
+        id="factory"
+        className="volt-about-section volt-factory-section"
+        aria-label="Volt factory"
+      >
+        <div className="volt-about-stage">
+          <canvas ref={factoryCanvasRef} className="volt-about-canvas" aria-label="Volt factory sequence" />
+          <div className="volt-vignette" aria-hidden="true" />
+          <div className="volt-grain" aria-hidden="true" />
+
+          {/* Overlay copy */}
+          <div className="volt-about-copy">
+            <p className="volt-eyebrow"><span /> Inside the plant</p>
+            <h2>Factory</h2>
+            <p className="volt-subheading">Scroll to play the sequence <span>.</span></p>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="volt-bottom-bar">
+            <span>{factoryLoaded < FACTORY_FRAME_SOURCES.length ? "Loading factory" : "Factory sequence ready"}</span>
+            <span className="volt-bottom-line" />
+            <span>
+              {factoryFrameNumber} / {String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* Fourth section: strike-can scroll-canvas sequence */}
       <section
         ref={(el) => {
@@ -2167,7 +2344,7 @@ export default function Home() {
               <div className="volt-grain" aria-hidden="true" />
               <div className="volt-menu-inner">
                 <nav className="volt-menu-list" aria-label="Choose a destination">
-                  <a href="#about" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                  <a href="#factory" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
                     <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Factory
                   </a>
                   <a href="#strike" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
