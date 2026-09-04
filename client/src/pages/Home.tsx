@@ -1989,14 +1989,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* CTA to the next page — Flavors */}
+          {/* CTA to the 360 viewer */}
           <button
             type="button"
             onClick={open360}
             className="volt-about-cta volt-about-film-cta"
-            aria-label="Open the Volt can 360 view"
+            aria-label="More info — open the Volt can 360 view"
           >
-            Explore flavors
+            More info
             <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
           </button>
 
