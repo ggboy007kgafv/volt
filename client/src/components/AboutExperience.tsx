@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import * as THREE from "three";
 import "./AboutExperience.css";
@@ -80,7 +81,9 @@ async function loadCan(onPct: (pct: number) => void): Promise<THREE.Group> {
     data = await res.arrayBuffer();
   }
   const gltf = await new Promise<THREE.Group>((resolve, reject) => {
-    new GLTFLoader().parse(
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    loader.parse(
       data,
       "",
       (g) => resolve(g.scene),

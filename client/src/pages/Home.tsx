@@ -3,13 +3,12 @@
  * Volt Acid accents, compressed display type, and motion that gives the can physical weight.
  * This page owns the sticky canvas stage and maps scroll progress to a buffered image sequence.
  */
-import { MutableRefObject, useEffect, useRef, useState } from "react";
+import { lazy, MutableRefObject, Suspense, useEffect, useRef, useState } from "react";
 import { ArrowDown, Check, ChevronLeft, ChevronRight, Zap, Volume2, VolumeX } from "lucide-react";
 import CountUp from "@/components/CountUp";
 import GlassSurface from "@/components/GlassSurface";
 import MaskedHeading from "@/components/MaskedHeading";
 import LiquidTransition, { LiquidTransitionHandle } from "@/components/LiquidTransition";
-import AboutExperience from "@/components/AboutExperience";
 import SupportChat from "@/components/SupportChat";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
@@ -19,6 +18,11 @@ import { STRIKE_FRAME_SOURCES } from "@/lib/strikeFrameSources";
 import { FACTORY_FRAME_SOURCES } from "@/lib/factoryFrameSources";
 
 const FRAME_SOURCES = VOLT_FRAME_SOURCES;
+
+// The 3D can viewer pulls in three.js + react-three-fiber (~1MB+). Load it
+// lazily so it only downloads the moment the viewer is opened, keeping the
+// initial bundle small.
+const AboutExperience = lazy(() => import("@/components/AboutExperience"));
 
 const nutritionRows = [
   { label: "Calories", value: 160, unit: "kcal" },
@@ -64,7 +68,7 @@ const products = [
   {
     id: "strawberry",
     name: "Strawberry Strike",
-    image: "/products/strawberry.png",
+    image: "/products/strawberry.webp",
     accent: "#ff5b7f",
     description: "Bright, jammy strawberry rush with a clean electric finish.",
     price: "$3.49",
@@ -74,7 +78,7 @@ const products = [
   {
     id: "orange",
     name: "Orange Strike",
-    image: "/products/orange.png",
+    image: "/products/orange.webp",
     accent: "#ff9330",
     description: "Bold sun-ripened orange heat with a sharp, zesty buzz.",
     price: "$3.49",
@@ -84,7 +88,7 @@ const products = [
   {
     id: "lemon",
     name: "Lemon Strike",
-    image: "/products/lemon.png",
+    image: "/products/lemon.webp",
     accent: "#ffd23c",
     description: "Crisp, sour lemon voltage that cuts clean through the charge.",
     price: "$3.49",
@@ -94,7 +98,7 @@ const products = [
   {
     id: "grape",
     name: "Grape Strike",
-    image: "/products/grape.png",
+    image: "/products/grape.webp",
     accent: "#a05bff",
     description: "Cold, heavy grape with a dark-fruit depth that lingers.",
     price: "$3.49",
@@ -2339,7 +2343,9 @@ export default function Home() {
             <span className="volt-360-badge">VOLT · 360°</span>
           </div>
           <div ref={expScroller} className="volt-360-scroller">
-            <AboutExperience overlay scrollRef={expScroller} onProgress={on360Progress} />
+            <Suspense fallback={null}>
+              <AboutExperience overlay scrollRef={expScroller} onProgress={on360Progress} />
+            </Suspense>
           </div>
 
           {/* End-of-orbit destination menu */}

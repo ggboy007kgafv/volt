@@ -145,8 +145,6 @@ a:focus-visible {
   isolation: isolate;
   background:
     linear-gradient(180deg, rgba(5, 17, 10, 0.4), rgba(5, 17, 10, 0.72)),
-    url("/manus-storage/ezgif-frame-001_b86fcc7d.jpg") center / cover no-repeat,
-    url("/manus-storage/volt-source_c2eb844e.png") center / cover no-repeat,
     radial-gradient(circle at 50% 45%, rgba(71, 178, 81, 0.22), transparent 31%),
     radial-gradient(circle at 50% 90%, rgba(16, 91, 43, 0.32), transparent 46%),
     #07150f;
