@@ -9,7 +9,6 @@ import CountUp from "@/components/CountUp";
 import GlassSurface from "@/components/GlassSurface";
 import MaskedHeading from "@/components/MaskedHeading";
 import LiquidTransition, { LiquidTransitionHandle } from "@/components/LiquidTransition";
-import AboutExperience from "@/components/AboutExperience";
 import SupportChat from "@/components/SupportChat";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
@@ -1402,7 +1401,7 @@ export default function Home() {
       </a>
       <div className="volt-nav-links">
         <a href="#ingredients" className="volt-nav-link">Ingredients</a>
-        <a href="#about-experience" className="volt-nav-link">About Volt</a>
+        <a href="#aboutvolt" className="volt-nav-link">About Volt</a>
         <a href="#strike" className="volt-nav-link">Flavors</a>
         <a href="#products" className="volt-nav-link">Products</a>
         <a href="#reviews" className="volt-nav-link">Reviews</a>
@@ -1690,9 +1689,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Immersive 3D About experience */}
-      <AboutExperience />
 
       {/* Fourth section: strike-can scroll-canvas sequence */}
       <section
