@@ -766,6 +766,9 @@ export default function Home() {
 
   // ---- Nav clicks: green particles -> liquid sweep -> jump to section -> reveal ----
   const liqBusyRef = useRef(false);
+  // Points at the latest open360 so the (once-mounted) nav listener can open
+  // the immersive About experience when the ABOUT link is clicked.
+  const open360Ref = useRef<(() => void) | null>(null);
   useEffect(() => {
     let lastSpawn = 0;
     const handleClick = (e: Event) => {
@@ -775,6 +778,13 @@ export default function Home() {
       const href = (target as HTMLAnchorElement).getAttribute('href');
       if (!href || !href.startsWith('#')) return;
       e.preventDefault();
+
+      // About Volt -> the immersive 3D About experience (same overlay as the
+      // film-page CTA), not a scroll.
+      if (href === '#aboutvolt') {
+        open360Ref.current?.();
+        return;
+      }
 
       const now = Date.now();
       if (now - lastSpawn >= 300) {
@@ -1421,6 +1431,7 @@ export default function Home() {
       setExpOpen(true);
     }
   };
+  open360Ref.current = open360;
 
   const close360 = (restore = true) => {
     setExpOpen(false);
