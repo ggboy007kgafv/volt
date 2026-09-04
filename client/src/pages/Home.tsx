@@ -14,6 +14,7 @@ import SupportChat from "@/components/SupportChat";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
 import { VOLT_FRAME_SOURCES } from "@/lib/voltFrameSources";
+import { ABOUT_FRAME_SOURCES } from "@/lib/aboutFrameSources";
 import { STRIKE_FRAME_SOURCES } from "@/lib/strikeFrameSources";
 
 const FRAME_SOURCES = VOLT_FRAME_SOURCES;
@@ -581,7 +582,15 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const particleContainerRef = useRef<HTMLDivElement>(null);
 
-
+  // ---- Third section (about) scroll canvas ----
+  const aboutSectionRef = useRef<HTMLElement>(null);
+  const aboutCanvasRef = useRef<HTMLCanvasElement>(null);
+  const aboutFrameImagesRef = useRef<(HTMLImageElement | null)[]>([]);
+  const aboutRafRef = useRef<number | null>(null);
+  const aboutTargetRef = useRef(0);
+  const aboutDisplayRef = useRef(0);
+  const [aboutProgress, setAboutProgress] = useState(0);
+  const [aboutLoaded, setAboutLoaded] = useState(0);
   const productsBubblesRef = useRef<HTMLCanvasElement>(null);
   const bubblesRef = useRef<HTMLCanvasElement>(null);
 
@@ -861,6 +870,7 @@ export default function Home() {
   }, []);
 
   const sec2Near = useNearViewport(nutritionSectionRef);
+  const aboutNear = useNearViewport(aboutSectionRef);
   const strikeNear = useNearViewport(strikeSectionRef);
 
   // ---- Load second-section frames (deferred until the section nears the viewport) ----
@@ -915,7 +925,57 @@ export default function Home() {
     };
   }, [sec2Near]);
 
+  // ---- Load third-section (about) frames (deferred until the section nears the viewport) ----
+  useEffect(() => {
+    if (!aboutNear) return;
+    let cancelled = false;
+    let nextBatchTimer: number | undefined;
+    const images: (HTMLImageElement | null)[] = ABOUT_FRAME_SOURCES.map(() => null);
+    aboutFrameImagesRef.current = images;
 
+    const loadFrame = (index: number) => {
+      if (cancelled || images[index]) return;
+      const image = new Image();
+      image.decoding = "async";
+      image.fetchPriority = index === 0 ? "high" : "low";
+      image.onload = () => {
+        if (cancelled) return;
+        images[index] = image;
+        aboutFrameImagesRef.current[index] = image;
+        setAboutLoaded((c) => c + 1);
+      };
+      image.onerror = () => {
+        if (!cancelled && index !== 0) {
+          images[index] = images[0];
+          aboutFrameImagesRef.current[index] = images[0];
+        }
+      };
+      image.src = ABOUT_FRAME_SOURCES[index];
+    };
+
+    loadFrame(0);
+    let batchStart = 1;
+    const loadNextBatch = () => {
+      const batchEnd = Math.min(batchStart + 14, ABOUT_FRAME_SOURCES.length);
+      for (let i = batchStart; i < batchEnd; i += 1) loadFrame(i);
+      batchStart = batchEnd;
+      if (batchStart < ABOUT_FRAME_SOURCES.length) {
+        nextBatchTimer = window.setTimeout(loadNextBatch, 80);
+      }
+    };
+    nextBatchTimer = window.setTimeout(loadNextBatch, 80);
+
+    return () => {
+      cancelled = true;
+      if (nextBatchTimer) window.clearTimeout(nextBatchTimer);
+      images.forEach((img) => {
+        if (img) {
+          img.onload = null;
+          img.onerror = null;
+        }
+      });
+    };
+  }, [aboutNear]);
 
   // ---- Load fourth-section (strike) frames (deferred until the section nears the viewport) ----
   useEffect(() => {
@@ -1138,6 +1198,83 @@ export default function Home() {
     };
   }, []);
 
+  // ---- Third-section (about) canvas render loop ----
+  useEffect(() => {
+    const canvas = aboutCanvasRef.current;
+    const section = aboutSectionRef.current;
+    if (!canvas || !section) return;
+    let lastAboutDrawn = -1;
+    let lastAboutPct = -1;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const render = () => {
+      const rect = section.getBoundingClientRect();
+      // Pause when far off-screen — the scroll listener restarts us on the way back.
+      if (rect.bottom < -160 || rect.top > window.innerHeight + 160) {
+        aboutRafRef.current = null;
+        return;
+      }
+      const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
+      const raw = clamp(-rect.top / scrollable, 0, 1);
+      aboutTargetRef.current = raw;
+      const diff = aboutTargetRef.current - aboutDisplayRef.current;
+      aboutDisplayRef.current += diff * 0.11;
+      const p = aboutDisplayRef.current;
+      const pct = Math.round(p * 100);
+      if (pct !== lastAboutPct) {
+        lastAboutPct = pct;
+        if (Math.abs(diff) > 0.0005) setAboutProgress(p);
+      }
+
+      const idx = Math.round(p * (ABOUT_FRAME_SOURCES.length - 1));
+      const img = aboutFrameImagesRef.current[idx] ?? aboutFrameImagesRef.current[0];
+      let drew = false;
+      if (img && img.naturalWidth > 0) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.parentElement?.clientWidth ?? 400;
+        const h = canvas.parentElement?.clientHeight ?? 600;
+        const pw = Math.floor(w * dpr);
+        const ph = Math.floor(h * dpr);
+        if (canvas.width !== pw || canvas.height !== ph) {
+          canvas.width = pw;
+          canvas.height = ph;
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = "#07150f";
+        ctx.fillRect(0, 0, w, h);
+        const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        const dw = img.naturalWidth * scale;
+        const dh = img.naturalHeight * scale;
+        ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        drew = true;
+      }
+      if (drew && Math.abs(diff) <= 0.0005 && idx === lastAboutDrawn) {
+        aboutRafRef.current = null;
+        return;
+      }
+      lastAboutDrawn = idx;
+      aboutRafRef.current = requestAnimationFrame(render);
+    };
+
+    const onScroll = () => {
+      if (aboutRafRef.current === null) aboutRafRef.current = requestAnimationFrame(render);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    aboutRafRef.current = requestAnimationFrame(render);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (aboutRafRef.current !== null) cancelAnimationFrame(aboutRafRef.current);
+      aboutRafRef.current = null;
+    };
+  }, []);
+
   // ---- Fourth-section (strike) canvas render loop ----
   useEffect(() => {
     const canvas = strikeCanvasRef.current;
@@ -1221,6 +1358,10 @@ export default function Home() {
 
   const sec2FrameNumber = String(
     Math.min(SECTION2_FRAME_SOURCES.length, Math.max(1, Math.round(sec2Progress * (SECTION2_FRAME_SOURCES.length - 1)) + 1)),
+  ).padStart(3, "0");
+
+  const aboutFrameNumber = String(
+    Math.min(ABOUT_FRAME_SOURCES.length, Math.max(1, Math.round(aboutProgress * (ABOUT_FRAME_SOURCES.length - 1)) + 1)),
   ).padStart(3, "0");
 
   const strikeFrameNumber = String(
@@ -1473,6 +1614,78 @@ export default function Home() {
             <span className="volt-bottom-line" />
             <span>
               {sec2FrameNumber} / {String(SECTION2_FRAME_SOURCES.length).padStart(3, "0")}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Small interstitial page: About Volt intro before the story */}
+      <section id="aboutvolt" className="volt-ingredients volt-about-intro" aria-label="About Volt">
+        <div className="volt-ingredients-inner">
+          <p className="volt-eyebrow"><span /> About the brand</p>
+          <MaskedHeading
+            text="About Volt"
+            tag="h2"
+            mediaType="video"
+            src="/ingredients-macro.mp4"
+            fillScale={1.35}
+            parallax={22}
+            drift={10}
+            brightness={1.05}
+            saturation={1.15}
+            reveal="rise"
+            trigger="view"
+            duration={1.2}
+            stagger={0.14}
+            align="center"
+            weight={400}
+            tracking={0.005}
+            lineHeight={0.9}
+            textScale={0.14}
+            className="volt-ingredients-heading"
+          />
+          <p className="volt-ingredients-sub">The story behind the charge</p>
+          <ArrowDown size={18} strokeWidth={1.8} className="volt-ingredients-arrow" />
+        </div>
+      </section>
+
+      {/* Third section: about scroll-canvas sequence */}
+      <section
+        ref={(el) => {
+          (aboutSectionRef as MutableRefObject<HTMLElement | null>).current = el;
+        }}
+        id="about"
+        className="volt-about-section"
+        aria-label="About Volt"
+      >
+        <div className="volt-about-stage">
+          <canvas ref={aboutCanvasRef} className="volt-about-canvas" aria-label="Volt about sequence" />
+          <div className="volt-vignette" aria-hidden="true" />
+          <div className="volt-grain" aria-hidden="true" />
+
+          {/* Overlay copy */}
+          <div className="volt-about-copy">
+            <p className="volt-eyebrow"><span /> About the brand</p>
+            <h2>Fueled by<br />Volt.</h2>
+            <p className="volt-subheading">Scroll to explore the story <span>.</span></p>
+          </div>
+
+          {/* Left side story text */}
+          <div className="volt-about-story">
+            <p>
+              Born from raw energy and bold design,<br />
+              Volt is built for the ones who move —<br />
+              engineered to charge every moment,<br />
+              and made to keep the current alive.
+            </p>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="volt-bottom-bar">
+            <span>{aboutLoaded < ABOUT_FRAME_SOURCES.length ? "Loading story" : "Story ready"}</span>
+            <span className="volt-bottom-line" />
+            <span>
+              {aboutFrameNumber} / {String(ABOUT_FRAME_SOURCES.length).padStart(3, "0")}
             </span>
           </div>
         </div>
@@ -1790,7 +2003,7 @@ export default function Home() {
           <nav className="volt-footer-links" aria-label="Footer">
             <a href="#hero" className="volt-nav-link">Film</a>
             <a href="#nutrition" className="volt-nav-link">Sequence</a>
-            <a href="#about-experience" className="volt-nav-link">Inside</a>
+            <a href="#about" className="volt-nav-link">Inside</a>
             <a href="#products" className="volt-nav-link">Shop</a>
           </nav>
           <p className="volt-footer-note">Charge responsibly — © 2026 Volt Strike Energy</p>
