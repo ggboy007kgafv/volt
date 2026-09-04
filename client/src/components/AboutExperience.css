@@ -162,6 +162,73 @@
   font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
 }
 
+/* ---- Sales option: smooth upward-growing graph ---- */
+.volt-menu-opt-sales {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding-right: 4px;
+}
+
+.volt-sales-graph {
+  width: clamp(96px, 13vw, 156px);
+  height: 46px;
+  overflow: visible;
+  opacity: 0.85;
+}
+
+.volt-sales-graph-line {
+  fill: none;
+  stroke: #39ff88;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 180;
+  stroke-dashoffset: 180;
+  animation: volt-sales-draw 1.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+
+.volt-sales-graph-fill {
+  fill: url(#volt-sales-fill);
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  animation: volt-sales-rise 1.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+
+.volt-sales-graph-dot {
+  fill: #b8ffd4;
+  opacity: 0;
+  animation: volt-sales-dot 0.3s ease 1.9s forwards, volt-sales-pulse 2.2s ease-in-out 2.2s infinite;
+}
+
+.volt-menu-opt-sales:hover .volt-sales-graph,
+.volt-menu-opt-sales:focus-visible .volt-sales-graph {
+  opacity: 1;
+}
+
+@keyframes volt-sales-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes volt-sales-rise {
+  to { transform: scaleY(1); }
+}
+
+@keyframes volt-sales-dot {
+  to { opacity: 1; }
+}
+
+@keyframes volt-sales-pulse {
+  0%, 100% {
+    r: 3;
+    opacity: 1;
+  }
+  50% {
+    r: 5;
+    opacity: 0.55;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* "What are you looking for?" — destination menu after the orbit      */
 /* ------------------------------------------------------------------ */

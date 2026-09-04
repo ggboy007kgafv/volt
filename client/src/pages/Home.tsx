@@ -2355,8 +2355,26 @@ export default function Home() {
                   <a href="#strike" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
                     <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Stock
                   </a>
-                  <a href="#products" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                  <a href="#products" className="volt-nav-link volt-menu-opt volt-menu-opt-sales" onClick={close360ForNav}>
                     <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Sales
+                    <svg className="volt-sales-graph" viewBox="0 0 140 44" preserveAspectRatio="none" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="volt-sales-fill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#39ff88" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#39ff88" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        className="volt-sales-graph-fill"
+                        d="M2 37 C 16 35, 24 29, 36 29 S 54 21, 64 20 S 82 12, 92 11 S 112 5, 138 3 L 138 44 L 2 44 Z"
+                      />
+                      <path
+                        className="volt-sales-graph-line"
+                        pathLength="180"
+                        d="M2 37 C 16 35, 24 29, 36 29 S 54 21, 64 20 S 82 12, 92 11 S 112 5, 138 3"
+                      />
+                      <circle className="volt-sales-graph-dot" cx="138" cy="3" r="3" />
+                    </svg>
                   </a>
                 </nav>
               </div>
