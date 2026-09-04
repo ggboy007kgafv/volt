@@ -1110,6 +1110,38 @@ a:focus-visible {
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Full-width liquid glass nav — hero state */
+.volt-nav-glass-full {
+  width: 100%;
+}
+
+.volt-nav-glass-full .volt-nav-glass-surface {
+  width: 100% !important;
+  height: 64px !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 1px 1px rgba(185, 244, 74, 0.1) inset,
+    0 12px 34px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(185, 244, 74, 0.14);
+}
+
+.volt-nav-glass-full .glass-surface__content {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.volt-nav-glass-full .volt-nav-inner {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
+  height: 100%;
+  padding: 0 34px;
+  box-sizing: border-box;
+}
+
 /* Pill glass nav — scrolled state */
 .volt-nav-pill-glass {
   width: auto;

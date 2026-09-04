@@ -1429,8 +1429,31 @@ export default function Home() {
       <nav className={`volt-nav ${isScrolled ? 'volt-nav--scrolled' : ''}`}>
         <div ref={particleContainerRef} className="volt-nav-particle-container" />
         {!isScrolled ? (
-          <div className="volt-nav-inner">
-            {renderNavContent()}
+          <div className="volt-nav-glass-full">
+            <GlassSurface
+              width="100%"
+              height={64}
+              borderRadius={0}
+              borderWidth={0.06}
+              brightness={12}
+              opacity={0.9}
+              blur={14}
+              displace={1.1}
+              backgroundOpacity={0.07}
+              saturation={1.15}
+              distortionScale={-90}
+              redOffset={4}
+              greenOffset={9}
+              blueOffset={15}
+              xChannel="R"
+              yChannel="G"
+              mixBlendMode="screen"
+              className="volt-nav-glass-surface"
+            >
+              <div className="volt-nav-inner">
+                {renderNavContent()}
+              </div>
+            </GlassSurface>
           </div>
         ) : (
           <div className="volt-nav-pill-glass">
