@@ -992,7 +992,7 @@ export default function Home() {
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) return;
     context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "medium";
+    context.imageSmoothingQuality = "high";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1022,7 +1022,7 @@ export default function Home() {
       const image = frameImagesRef.current[frameIndex] ?? frameImagesRef.current[0];
       let drew = false;
       if (image && image.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const width = window.innerWidth;
         const height = window.innerHeight;
         const pixelWidth = Math.floor(width * dpr);
@@ -1083,7 +1083,7 @@ export default function Home() {
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "medium";
+    ctx.imageSmoothingQuality = "high";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1108,7 +1108,7 @@ export default function Home() {
       const img = sec2FrameImagesRef.current[idx] ?? sec2FrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1160,7 +1160,7 @@ export default function Home() {
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "medium";
+    ctx.imageSmoothingQuality = "high";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1185,7 +1185,7 @@ export default function Home() {
       const img = aboutFrameImagesRef.current[idx] ?? aboutFrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1237,7 +1237,7 @@ export default function Home() {
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "medium";
+    ctx.imageSmoothingQuality = "high";
 
     const render = () => {
       const rect = section.getBoundingClientRect();
@@ -1262,7 +1262,7 @@ export default function Home() {
       const img = strikeFrameImagesRef.current[idx] ?? strikeFrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
