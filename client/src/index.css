@@ -1774,13 +1774,42 @@ a:focus-visible {
 }
 
 /*
- * Scroll-only liquid-glass easing: the SVG displacement backdrop filter is
- * re-rasterized on the CPU for every glass surface at each scroll commit,
- * which made the last pages jank. While the page is actively scrolling the
- * glass briefly switches to a plain GPU-composited backdrop blur (motion
- * hides the difference), and the full liquid-displacement look returns the
- * moment scrolling stops — so quality is never lost at rest.
+ * Liquid-glass cost balance for the dense Products / Reviews pages.
+ *
+ * The SVG displacement backdrop filter is re-rasterized on the CPU per
+ * surface at every scroll commit or backdrop repaint — eleven of them at
+ * once is what made the last two pages jank. So dense-page cards default to
+ * a plain GPU-composited backdrop blur (visually the same frosted glass),
+ * and the full liquid displacement is restored exactly where you look:
+ * the featured card and any card under the pointer.
  */
+.volt-product-glass.glass-surface--svg,
+.volt-rating-glass.glass-surface--svg,
+.volt-review-glass.glass-surface--svg {
+  backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
+  -webkit-backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
+}
+
+.volt-product[data-active="true"] .volt-product-glass.glass-surface--svg,
+.volt-product:hover .volt-product-glass.glass-surface--svg,
+.volt-product:focus-visible .volt-product-glass.glass-surface--svg,
+.volt-review:hover .volt-review-glass.glass-surface--svg,
+.volt-review:focus-visible .volt-review-glass.glass-surface--svg {
+  backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1.3));
+  -webkit-backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1.3));
+}
+
+/*
+ * While the page is actively scrolling every remaining displacement surface
+ * (navbar, nutrition panel, the focused card) briefly eases onto GPU blur —
+ * scroll motion re-rasterizes the SVG filter on the CPU each frame, and
+ * motion hides the swap. The liquid look returns the moment scrolling stops.
+ */
+body.volt-is-scrolling .glass-surface.volt-product-glass.glass-surface--svg,
+body.volt-is-scrolling .glass-surface.volt-rating-glass.glass-surface--svg,
+body.volt-is-scrolling .glass-surface.volt-review-glass.glass-surface--svg,
+body.volt-is-scrolling .glass-surface.volt-glass-surface.glass-surface--svg,
+body.volt-is-scrolling .glass-surface.volt-nav-glass-surface.glass-surface--svg,
 body.volt-is-scrolling .glass-surface--svg {
   backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
   -webkit-backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
