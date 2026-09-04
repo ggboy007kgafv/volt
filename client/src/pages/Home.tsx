@@ -1419,11 +1419,15 @@ export default function Home() {
   // True after the orbit scroll reaches 100% — reveals the
   // "What are you looking for?" destination menu inside the overlay.
   const [expEnded, setExpEnded] = useState(false);
+  // Interactive soda-fizz bubbles behind the end-of-orbit menu.
+  const menuBubblesRef = useRef<HTMLCanvasElement>(null);
 
   const open360 = () => {
     expRestoreY.current = window.scrollY;
     expDoneAt.current = null;
     setExpEnded(false);
+    // (re)start the fizz the moment the viewer opens
+    bubbleActivityRef.current = performance.now();
     lerpStopRef.current?.(); // don't let a mid-flight glide fight the overlay
     const liq = liqRef.current;
     if (liq) {
@@ -1466,6 +1470,17 @@ export default function Home() {
   // rising over the page) and let the shared nav listener play the green
   // particles + liquid transition + jump to the section.
   const close360ForNav = () => close360(false);
+
+  // Interactive fizz behind the end-of-orbit menu (same bubbles as Products /
+  // Reviews — they rise like carbonation and dodge the cursor).
+  useEffect(() => {
+    if (!expEnded) return;
+    const canvas = menuBubblesRef.current;
+    if (!canvas) return;
+    bubbleActivityRef.current = performance.now();
+    return runBubbleCanvas(canvas, reducedMotion, bubbleActivityRef);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expEnded, reducedMotion]);
   const openSupportFromMenu = () => {
     close360(true);
     window.requestAnimationFrame(() => {
@@ -2154,6 +2169,7 @@ export default function Home() {
           {/* End-of-orbit destination menu */}
           {expEnded && (
             <div className="volt-menu-screen" role="dialog" aria-modal="true" aria-label="What are you looking for">
+              <canvas ref={menuBubblesRef} className="volt-bubbles" aria-hidden="true" />
               <div className="volt-grain" aria-hidden="true" />
               <div className="volt-menu-inner">
                 <p className="volt-menu-heading">What are you looking for?</p>

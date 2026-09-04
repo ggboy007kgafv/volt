@@ -150,12 +150,14 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(ellipse 72% 62% at 50% 44%, rgba(15, 34, 23, 0.93), rgba(3, 9, 5, 0.985) 72%);
+    radial-gradient(ellipse 72% 62% at 50% 44%, rgba(13, 30, 20, 0.9), rgba(2, 8, 4, 0.965) 72%);
   animation: volt-menu-fade 0.7s ease both;
   overflow: hidden;
 }
 
 .volt-menu-inner {
+  position: relative;
+  z-index: 2;
   width: min(560px, 86vw);
   padding: 26px 10px;
 }
