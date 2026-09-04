@@ -563,6 +563,44 @@ a:focus-visible {
   margin-top: 1.5rem;
 }
 
+/* CTA on the About Volt interstitial — liquid-glass pill, green glow */
+.volt-about-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2rem;
+  padding: 13px 26px;
+  border-radius: 100px;
+  border: 1px solid rgba(157, 255, 194, 0.45);
+  background: linear-gradient(180deg, rgba(20, 60, 34, 0.55), rgba(8, 20, 13, 0.65));
+  box-shadow:
+    0 0 1px 1px rgba(57, 255, 136, 0.18) inset,
+    0 0 26px -6px rgba(57, 255, 136, 0.5),
+    0 10px 30px rgba(0, 0, 0, 0.4);
+  color: #eafff2;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.volt-about-cta:hover {
+  transform: translateY(-2px);
+  border-color: rgba(185, 244, 74, 0.85);
+  box-shadow:
+    0 0 1px 1px rgba(185, 244, 74, 0.3) inset,
+    0 0 34px -4px rgba(57, 255, 136, 0.75),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+.volt-about-intro .volt-about-cta {
+  margin-top: 1.6rem;
+}
+
 @media (max-width: 640px) {
   .volt-about-intro {
     height: auto;
