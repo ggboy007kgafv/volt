@@ -617,6 +617,10 @@ export default function Home() {
   const factoryDisplayRef = useRef(0);
   const [factoryProgress, setFactoryProgress] = useState(0);
   const [factoryLoaded, setFactoryLoaded] = useState(0);
+  // Factory film — on-demand overlay (opened only from the end-menu).
+  const [factoryOpen, setFactoryOpen] = useState(false);
+  const factoryOpenRef = useRef(false);
+  const factoryScroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -747,10 +751,9 @@ export default function Home() {
     lerpStopRef.current = stop;
 
     const onWheel = (e: WheelEvent) => {
-      // While the 360 viewer overlay is open it owns its own internal
-      // scroller — let the browser handle wheel input natively so the
-      // orbit actually spins.
-      if (expOpenRef.current) return;
+      // While the 360 viewer or factory overlay is open it owns its own
+      // internal scroller — let the browser handle wheel input natively.
+      if (expOpenRef.current || factoryOpenRef.current) return;
       e.preventDefault();
       targetY += e.deltaY;
       targetY = Math.min(Math.max(targetY, 0), maxScroll());
@@ -1496,19 +1499,24 @@ export default function Home() {
       factoryRafRef.current = requestAnimationFrame(render);
     };
 
+    // The factory film lives inside its own overlay scroller, so scroll
+    // events come from that element (not the window) while it is open.
+    const scroller = factoryScroller.current;
     const onScroll = () => {
       if (factoryRafRef.current === null) factoryRafRef.current = requestAnimationFrame(render);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    scroller?.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     factoryRafRef.current = requestAnimationFrame(render);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      scroller?.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (factoryRafRef.current !== null) cancelAnimationFrame(factoryRafRef.current);
       factoryRafRef.current = null;
     };
-  }, []);
+    // The section only exists while the overlay is open, so re-attach the
+    // loop each time it mounts.
+  }, [factoryOpen]);
 
   const copyOpacity = 1 - clamp(progress / 0.3, 0, 1);
   const progressPercent = Math.round(progress * 100);
@@ -1597,6 +1605,19 @@ export default function Home() {
     }
   };
 
+  const openFactory = () => {
+    // close the end-menu overlay (if open) and open the factory film
+    setExpOpen(false);
+    expOpenRef.current = false;
+    factoryOpenRef.current = true;
+    setFactoryOpen(true);
+  };
+
+  const closeFactory = () => {
+    setFactoryOpen(false);
+    factoryOpenRef.current = false;
+  };
+
   const on360Progress = (pct: number) => {
     if (pct >= 100) {
       // At the end of the orbit, reveal the destination menu (once).
@@ -1642,6 +1663,22 @@ export default function Home() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expOpen]);
+
+  // Lock the page while the factory film is open; Escape closes it.
+  useEffect(() => {
+    if (!factoryOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeFactory();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [factoryOpen]);
 
   const renderNavContent = () => (
     <>
@@ -1969,38 +2006,6 @@ export default function Home() {
             <span className="volt-bottom-line" />
             <span>
               {aboutFrameNumber} / {String(ABOUT_FRAME_SOURCES.length).padStart(3, "0")}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Factory scroll-canvas sequence */}
-      <section
-        ref={(el) => {
-          (factorySectionRef as MutableRefObject<HTMLElement | null>).current = el;
-        }}
-        id="factory"
-        className="volt-about-section volt-factory-section"
-        aria-label="Volt factory"
-      >
-        <div className="volt-about-stage">
-          <canvas ref={factoryCanvasRef} className="volt-about-canvas" aria-label="Volt factory sequence" />
-          <div className="volt-vignette" aria-hidden="true" />
-          <div className="volt-grain" aria-hidden="true" />
-
-          {/* Overlay copy */}
-          <div className="volt-about-copy">
-            <p className="volt-eyebrow"><span /> Inside the plant</p>
-            <h2>Factory</h2>
-            <p className="volt-subheading">Scroll to play the sequence <span>.</span></p>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="volt-bottom-bar">
-            <span>{factoryLoaded < FACTORY_FRAME_SOURCES.length ? "Loading factory" : "Factory sequence ready"}</span>
-            <span className="volt-bottom-line" />
-            <span>
-              {factoryFrameNumber} / {String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}
             </span>
           </div>
         </div>
@@ -2344,9 +2349,9 @@ export default function Home() {
               <div className="volt-grain" aria-hidden="true" />
               <div className="volt-menu-inner">
                 <nav className="volt-menu-list" aria-label="Choose a destination">
-                  <a href="#factory" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
+                  <button type="button" className="volt-menu-opt volt-menu-opt-btn" onClick={openFactory}>
                     <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Factory
-                  </a>
+                  </button>
                   <a href="#strike" className="volt-nav-link volt-menu-opt" onClick={close360ForNav}>
                     <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Stock
                   </a>
@@ -2357,6 +2362,50 @@ export default function Home() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* On-demand Factory film (opened only from the end-menu) */}
+      {factoryOpen && (
+        <div className="volt-factory-overlay" role="dialog" aria-modal="true" aria-label="Volt factory">
+          <div className="volt-360-head">
+            <button type="button" className="volt-360-exit" onClick={closeFactory} aria-label="Close the factory view">
+              <span aria-hidden="true">✕</span> Exit
+            </button>
+            <span className="volt-360-badge">VOLT · FACTORY</span>
+          </div>
+          <div ref={factoryScroller} className="volt-360-scroller">
+            <section
+              ref={(el) => {
+                (factorySectionRef as MutableRefObject<HTMLElement | null>).current = el;
+              }}
+              id="factory"
+              className="volt-about-section volt-factory-section"
+              aria-label="Volt factory"
+            >
+              <div className="volt-about-stage">
+                <canvas ref={factoryCanvasRef} className="volt-about-canvas" aria-label="Volt factory sequence" />
+                <div className="volt-vignette" aria-hidden="true" />
+                <div className="volt-grain" aria-hidden="true" />
+
+                {/* Overlay copy */}
+                <div className="volt-about-copy">
+                  <p className="volt-eyebrow"><span /> Inside the plant</p>
+                  <h2>Factory</h2>
+                  <p className="volt-subheading">Scroll to play the sequence <span>.</span></p>
+                </div>
+
+                {/* Bottom bar */}
+                <div className="volt-bottom-bar">
+                  <span>{factoryLoaded < FACTORY_FRAME_SOURCES.length ? "Loading factory" : "Factory sequence ready"}</span>
+                  <span className="volt-bottom-line" />
+                  <span>
+                    {factoryFrameNumber} / {String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       )}
 

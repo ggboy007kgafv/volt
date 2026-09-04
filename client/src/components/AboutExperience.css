@@ -139,6 +139,30 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* On-demand Factory film overlay (opened from the end-menu)           */
+/* ------------------------------------------------------------------ */
+
+.volt-factory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  background: #020604;
+}
+
+.volt-factory-overlay .volt-360-scroller {
+  scrollbar-width: none;
+}
+
+/* End-menu option rendered as a button (Factory) */
+.volt-menu-opt-btn {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+}
+
+/* ------------------------------------------------------------------ */
 /* "What are you looking for?" — destination menu after the orbit      */
 /* ------------------------------------------------------------------ */
 
