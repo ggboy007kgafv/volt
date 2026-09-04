@@ -9,6 +9,7 @@ import CountUp from "@/components/CountUp";
 import GlassSurface from "@/components/GlassSurface";
 import MaskedHeading from "@/components/MaskedHeading";
 import LiquidTransition, { LiquidTransitionHandle } from "@/components/LiquidTransition";
+import AboutExperience from "@/components/AboutExperience";
 import SupportChat from "@/components/SupportChat";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
@@ -1703,7 +1704,7 @@ export default function Home() {
           </div>
 
           {/* CTA to the next page — Flavors */}
-          <a href="#strike" className="volt-about-cta volt-about-film-cta volt-nav-link" aria-label="Continue to the Volt flavors">
+          <a href="#about-experience" className="volt-about-cta volt-about-film-cta volt-nav-link" aria-label="Open the Volt can 360 view">
             Explore flavors
             <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
           </a>
@@ -1718,6 +1719,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* 360 product experience — reached from the film page CTA */}
+      <AboutExperience />
 
       {/* Fourth section: strike-can scroll-canvas sequence */}
       <section
