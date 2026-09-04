@@ -686,21 +686,22 @@ export default function Home() {
     let currentY = window.scrollY;
     let rafId: number | null = null;
     let animating = false;
-    let frameSkip = false; // throttle: ease+scrollTo on every other frame
+    // Responsive cinematic feel: a brisk ease that stays one rAF per frame so
+    // the page tracks the wheel at full 60fps. A per-frame step cap keeps fast
+    // wheel flicks from teleporting, while the stronger catch-up ends the glide
+    // almost immediately after the wheel stops (no rubber-band tail).
+    const EASE = 0.14;
+    const MAX_STEP = 140;
 
     const maxScroll = () =>
       Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
 
     const tick = () => {
-      frameSkip = !frameSkip;
-      if (frameSkip) {
-        // Throttle: skip every other frame so wheel scrolling does half the
-        // scrollTo writes (each write forces layout + paint work).
-        rafId = requestAnimationFrame(tick);
-        return;
-      }
       const diff = targetY - currentY;
-      currentY += diff * 0.032; // extra slow, cinematic ease
+      let step = diff * EASE;
+      if (step > MAX_STEP) step = MAX_STEP;
+      else if (step < -MAX_STEP) step = -MAX_STEP;
+      currentY += step;
       if (Math.abs(diff) < 0.5) {
         currentY = targetY;
         window.scrollTo({ top: currentY, behavior: "instant" as ScrollBehavior });
