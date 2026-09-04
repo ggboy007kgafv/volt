@@ -138,6 +138,113 @@
   background: #020604;
 }
 
+/* ------------------------------------------------------------------ */
+/* "What are you looking for?" — destination menu after the orbit      */
+/* ------------------------------------------------------------------ */
+
+.volt-menu-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 44%, rgba(15, 34, 23, 0.93), rgba(3, 9, 5, 0.985) 72%);
+  animation: volt-menu-fade 0.7s ease both;
+  overflow: hidden;
+}
+
+.volt-menu-inner {
+  width: min(560px, 86vw);
+  padding: 26px 10px;
+}
+
+.volt-menu-heading {
+  margin: 0 0 38px;
+  text-align: center;
+  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  font-size: clamp(19px, 2.8vw, 28px);
+  letter-spacing: 0.16em;
+  color: #f2fff6;
+  text-shadow: 0 0 26px rgba(57, 255, 136, 0.35);
+}
+
+.volt-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 42px;
+}
+
+.volt-menu-opt {
+  display: block;
+  width: fit-content;
+  padding: 5px 8px;
+  text-decoration: none;
+  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  font-size: clamp(16px, 2vw, 21px);
+  letter-spacing: 0.1em;
+  color: rgba(155, 255, 195, 0.62);
+  text-transform: uppercase;
+  transition: color 0.25s ease, transform 0.25s ease, letter-spacing 0.25s ease;
+  animation: volt-menu-item 0.55s ease both;
+  animation-delay: calc(var(--i, 0) * 95ms + 0.15s);
+}
+
+.volt-menu-opt:hover,
+.volt-menu-opt:focus-visible {
+  color: #39ff88;
+  transform: translateX(10px);
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 18px rgba(57, 255, 136, 0.55);
+  outline: none;
+}
+
+.volt-menu-arrow {
+  display: inline-block;
+  color: #39ff88;
+  margin-right: 14px;
+}
+
+.volt-menu-ask {
+  display: block;
+  margin: 0 auto;
+  width: min(340px, 82%);
+  padding: 16px 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(57, 255, 136, 0.5);
+  background: rgba(57, 255, 136, 0.05);
+  color: rgba(215, 255, 230, 0.85);
+  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+  animation: volt-menu-item 0.55s ease both;
+  animation-delay: 0.7s;
+}
+
+.volt-menu-ask:hover,
+.volt-menu-ask:focus-visible {
+  border-color: #39ff88;
+  background: rgba(57, 255, 136, 0.12);
+  box-shadow: 0 0 32px -4px rgba(57, 255, 136, 0.4);
+  color: #ffffff;
+  outline: none;
+}
+
+@keyframes volt-menu-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes volt-menu-item {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .volt-360-scroller {
   position: absolute;
   inset: 0;

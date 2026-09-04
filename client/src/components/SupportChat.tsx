@@ -96,6 +96,14 @@ export default function SupportChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [msgs, thinking, open]);
 
+  // Let other parts of the site (e.g. the 360 end-menu's "Ask me anything"
+  // pill) open the assistant programmatically.
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener("volt:open-support", onOpen);
+    return () => window.removeEventListener("volt:open-support", onOpen);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {

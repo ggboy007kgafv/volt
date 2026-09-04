@@ -1416,9 +1416,14 @@ export default function Home() {
   const expRestoreY = useRef(0);
   const expScroller = useRef<HTMLDivElement>(null);
   const expDoneAt = useRef<number | null>(null);
+  // True after the orbit scroll reaches 100% — reveals the
+  // "What are you looking for?" destination menu inside the overlay.
+  const [expEnded, setExpEnded] = useState(false);
 
   const open360 = () => {
     expRestoreY.current = window.scrollY;
+    expDoneAt.current = null;
+    setExpEnded(false);
     lerpStopRef.current?.(); // don't let a mid-flight glide fight the overlay
     const liq = liqRef.current;
     if (liq) {
@@ -1444,23 +1449,28 @@ export default function Home() {
   };
 
   const on360Progress = (pct: number) => {
-    const now = Date.now();
     if (pct >= 100) {
-      if (expDoneAt.current === null) expDoneAt.current = now;
-      else if (now - expDoneAt.current > 700) {
-        expDoneAt.current = null;
-        close360(false);
-        const target = document.querySelector<HTMLElement>("#strike");
-        if (target) {
-          window.scrollTo({
-            top: target.getBoundingClientRect().top + window.scrollY,
-            behavior: "instant" as ScrollBehavior,
-          });
-        }
+      // At the end of the orbit, reveal the destination menu (once).
+      if (expDoneAt.current === null) {
+        expDoneAt.current = Date.now();
+        window.setTimeout(() => {
+          setExpEnded((v) => (v ? v : true));
+        }, 650);
       }
     } else {
       expDoneAt.current = null;
     }
+  };
+
+  // Menu option: close the overlay (no restore — the liquid wipe is already
+  // rising over the page) and let the shared nav listener play the green
+  // particles + liquid transition + jump to the section.
+  const close360ForNav = () => close360(false);
+  const openSupportFromMenu = () => {
+    close360(true);
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent("volt:open-support"));
+    });
   };
 
   // Lock the page while the viewer is open; Escape closes it.
@@ -2140,6 +2150,36 @@ export default function Home() {
           <div ref={expScroller} className="volt-360-scroller">
             <AboutExperience overlay scrollRef={expScroller} onProgress={on360Progress} />
           </div>
+
+          {/* End-of-orbit destination menu */}
+          {expEnded && (
+            <div className="volt-menu-screen" role="dialog" aria-modal="true" aria-label="What are you looking for">
+              <div className="volt-grain" aria-hidden="true" />
+              <div className="volt-menu-inner">
+                <p className="volt-menu-heading">What are you looking for?</p>
+                <nav className="volt-menu-list" aria-label="Choose a destination">
+                  <a href="#strike" className="volt-nav-link volt-menu-opt" style={{ "--i": 0 } as React.CSSProperties} onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Flavors
+                  </a>
+                  <a href="#about" className="volt-nav-link volt-menu-opt" style={{ "--i": 1 } as React.CSSProperties} onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Our Story
+                  </a>
+                  <a href="#nutrition" className="volt-nav-link volt-menu-opt" style={{ "--i": 2 } as React.CSSProperties} onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Nutrition
+                  </a>
+                  <a href="#products" className="volt-nav-link volt-menu-opt" style={{ "--i": 3 } as React.CSSProperties} onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Products
+                  </a>
+                  <a href="#reviews" className="volt-nav-link volt-menu-opt" style={{ "--i": 4 } as React.CSSProperties} onClick={close360ForNav}>
+                    <span className="volt-menu-arrow" aria-hidden="true">-&gt;</span> Reviews
+                  </a>
+                </nav>
+                <button type="button" className="volt-menu-ask" onClick={openSupportFromMenu}>
+                  Ask me anything...
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
