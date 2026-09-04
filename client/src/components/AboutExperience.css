@@ -4,7 +4,7 @@
 
 .volt-exp {
   position: relative;
-  height: 420vh;
+  height: 340vh;
   overflow-x: clip;
   background:
     radial-gradient(ellipse 70% 55% at 50% 20%, rgba(20, 74, 44, 0.16), transparent 62%),
@@ -118,7 +118,7 @@
 
 @media (max-width: 640px) {
   .volt-exp {
-    height: 360vh;
+    height: 300vh;
   }
   .volt-exp .volt-bottom-bar {
     right: 20px;
