@@ -207,14 +207,23 @@ function Scene({
 /* ------------------------------------------------------------------ */
 /* Page wrapper                                                        */
 /* ------------------------------------------------------------------ */
-export default function AboutExperience() {
+interface AboutExperienceProps {
+  /** Full-screen on-demand mode: renders inside a locked overlay scroller. */
+  overlay?: boolean;
+  /** The overlay's internal scroll container (overlay mode). */
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
+  /** Live progress callback (0..100) for overlay choreography. */
+  onProgress?: (pct: number) => void;
+}
+
+export default function AboutExperience({ overlay = false, scrollRef, onProgress }: AboutExperienceProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const progressRef = useRef(0);
   const [canReady, setCanReady] = useState(false);
   const [pct, setPct] = useState(0);
   const pctShown = useRef(-1);
   const rafRef = useRef<number | null>(null);
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(overlay);
   const readyRef = useRef(false);
 
   const onCanReady = useCallback(() => {
@@ -223,8 +232,13 @@ export default function AboutExperience() {
     setCanReady(true);
   }, []);
 
-  // Mount the WebGL canvas only while this section is near the viewport.
+  // Inline mode: mount the WebGL canvas only while the section is near the
+  // viewport. Overlay mode is always active because it only exists while open.
   useEffect(() => {
+    if (overlay) {
+      setActive(true);
+      return;
+    }
     const el = sectionRef.current;
     if (!el || !("IntersectionObserver" in window)) {
       setActive(true);
@@ -236,13 +250,29 @@ export default function AboutExperience() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overlay]);
 
-  // Scroll progress
+  // Scroll progress (overlay: measured on the internal scroller)
   useEffect(() => {
     const tick = () => {
       rafRef.current = window.requestAnimationFrame(tick);
       if (!active) return;
+      if (overlay && scrollRef) {
+        const sc = scrollRef.current;
+        if (sc) {
+          const total = Math.max(sc.scrollHeight - sc.clientHeight, 1);
+          const raw = clamp01(sc.scrollTop / total);
+          progressRef.current = raw;
+          const shown = Math.round(raw * 100);
+          if (shown !== pctShown.current) {
+            pctShown.current = shown;
+            setPct(shown);
+            onProgress?.(shown);
+          }
+        }
+        return;
+      }
       const sec = sectionRef.current;
       if (!sec) return;
       const rect = sec.getBoundingClientRect();
@@ -253,13 +283,15 @@ export default function AboutExperience() {
       if (shown !== pctShown.current) {
         pctShown.current = shown;
         setPct(shown);
+        onProgress?.(shown);
       }
     };
     rafRef.current = window.requestAnimationFrame(tick);
     return () => {
       if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
     };
-  }, [active]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, overlay, scrollRef, onProgress]);
 
   return (
     <section ref={sectionRef} id="about-experience" className="volt-exp" aria-label="Volt can — 360 view">

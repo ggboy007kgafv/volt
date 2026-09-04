@@ -1394,6 +1394,67 @@ export default function Home() {
 
   // handleNavClick removed — native click listener handles particles + smooth scroll via CSS
 
+  // ---- 360 product viewer — on-demand overlay (not part of the main page) ----
+  const [expOpen, setExpOpen] = useState(false);
+  const expRestoreY = useRef(0);
+  const expScroller = useRef<HTMLDivElement>(null);
+  const expDoneAt = useRef<number | null>(null);
+
+  const open360 = () => {
+    expRestoreY.current = window.scrollY;
+    const liq = liqRef.current;
+    if (liq) {
+      liq.play(() => setExpOpen(true), () => {});
+    } else {
+      setExpOpen(true);
+    }
+  };
+
+  const close360 = (restore = true) => {
+    setExpOpen(false);
+    if (restore) {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: expRestoreY.current, behavior: "instant" as ScrollBehavior });
+      });
+    }
+  };
+
+  const on360Progress = (pct: number) => {
+    const now = Date.now();
+    if (pct >= 100) {
+      if (expDoneAt.current === null) expDoneAt.current = now;
+      else if (now - expDoneAt.current > 700) {
+        expDoneAt.current = null;
+        close360(false);
+        const target = document.querySelector<HTMLElement>("#strike");
+        if (target) {
+          window.scrollTo({
+            top: target.getBoundingClientRect().top + window.scrollY,
+            behavior: "instant" as ScrollBehavior,
+          });
+        }
+      }
+    } else {
+      expDoneAt.current = null;
+    }
+  };
+
+  // Lock the page while the viewer is open; Escape closes it.
+  useEffect(() => {
+    if (!expOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close360(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expOpen]);
+
   const renderNavContent = () => (
     <>
       <a href="#hero" className="volt-nav-brand">
@@ -1704,10 +1765,15 @@ export default function Home() {
           </div>
 
           {/* CTA to the next page — Flavors */}
-          <a href="#about-experience" className="volt-about-cta volt-about-film-cta volt-nav-link" aria-label="Open the Volt can 360 view">
+          <button
+            type="button"
+            onClick={open360}
+            className="volt-about-cta volt-about-film-cta"
+            aria-label="Open the Volt can 360 view"
+          >
             Explore flavors
             <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
-          </a>
+          </button>
 
           {/* Bottom bar */}
           <div className="volt-bottom-bar">
@@ -1719,9 +1785,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* 360 product experience — reached from the film page CTA */}
-      <AboutExperience />
 
       {/* Fourth section: strike-can scroll-canvas sequence */}
       <section
@@ -2040,6 +2103,21 @@ export default function Home() {
       </footer>
 
       <LiquidTransition ref={liqRef} />
+
+      {/* On-demand 360 product viewer */}
+      {expOpen && (
+        <div className="volt-360-overlay" role="dialog" aria-modal="true" aria-label="Volt can 360 view">
+          <div className="volt-360-head">
+            <button type="button" className="volt-360-exit" onClick={() => close360(true)} aria-label="Close the 360 view">
+              <span aria-hidden="true">✕</span> Exit
+            </button>
+            <span className="volt-360-badge">VOLT · 360°</span>
+          </div>
+          <div ref={expScroller} className="volt-360-scroller">
+            <AboutExperience overlay scrollRef={expScroller} onProgress={on360Progress} />
+          </div>
+        </div>
+      )}
 
       {/* Floating AI support assistant */}
       <SupportChat />
