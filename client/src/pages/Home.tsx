@@ -239,6 +239,7 @@ const RATING_DIST = [
 function runBubbleCanvas(
   canvas: HTMLCanvasElement,
   reducedMotion: boolean,
+  activityRef: { current: number },
 ): () => void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return () => {};
@@ -334,6 +335,14 @@ function runBubbleCanvas(
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
     const t = now / 1000;
+    // Idle freeze: the glass cards use an SVG displacement backdrop filter that
+    // re-runs on the CPU whenever this canvas repaints. When the user hasn't
+    // scrolled or moved the pointer recently, hold the last frame (no draw, no
+    // filter invalidation) and cheaply re-check; any activity restarts the fizz.
+    if (now - activityRef.current > 2600) {
+      raf = requestAnimationFrame(tick);
+      return;
+    }
     // Ambient background: render every other frame
     frameSkip = !frameSkip;
     if (frameSkip) {
@@ -604,19 +613,56 @@ export default function Home() {
 
   // ---- Interactive soda-fizz bubble background (Products + Reviews) ----
   // Bubbles float upward like carbonation and gently dodge away from the cursor.
+  const bubbleActivityRef = useRef(0);
+
   useEffect(() => {
     const canvas = productsBubblesRef.current;
     if (!canvas) return;
-    return runBubbleCanvas(canvas, reducedMotion);
+    return runBubbleCanvas(canvas, reducedMotion, bubbleActivityRef);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion]);
 
   useEffect(() => {
     const canvas = bubblesRef.current;
     if (!canvas) return;
-    return runBubbleCanvas(canvas, reducedMotion);
+    return runBubbleCanvas(canvas, reducedMotion, bubbleActivityRef);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion]);
+
+  // Pointer moves / presses keep the fizz alive; after a quiet beat it freezes
+  // so the glass displacement filters stay cached (see idle freeze in the tick).
+  useEffect(() => {
+    const poke = () => {
+      bubbleActivityRef.current = performance.now();
+    };
+    window.addEventListener("pointermove", poke, { passive: true });
+    window.addEventListener("pointerdown", poke, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", poke);
+      window.removeEventListener("pointerdown", poke);
+    };
+  }, []);
+
+  // While the page is actively scrolling, mark it so the glass surfaces ease
+  // onto cheap GPU blur (scroll motion re-rasterizes the SVG displacement on
+  // the CPU every frame); the liquid look returns once scrolling stops.
+  useEffect(() => {
+    let idleTimer: number | undefined;
+    const markScrolling = () => {
+      bubbleActivityRef.current = performance.now();
+      document.body.classList.add("volt-is-scrolling");
+      if (idleTimer !== undefined) window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => {
+        document.body.classList.remove("volt-is-scrolling");
+      }, 260);
+    };
+    window.addEventListener("scroll", markScrolling, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", markScrolling);
+      if (idleTimer !== undefined) window.clearTimeout(idleTimer);
+    };
+  }, []);
+
   // ---- Track scroll for navbar shape: pill when scrolled past hero ----
   useEffect(() => {
     const handleScroll = () => {

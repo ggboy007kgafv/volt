@@ -1774,15 +1774,14 @@ a:focus-visible {
 }
 
 /*
- * Cheaper liquid glass on the Products / Reviews cards: the SVG displacement
- * backdrop filter re-runs on the CPU for every card whenever the fizz-bubble
- * canvas behind them repaints (30fps) or the page scrolls — that is what made
- * the last two pages lag. A plain GPU-composited backdrop blur keeps the
- * frosted glass look at a fraction of the cost.
+ * Scroll-only liquid-glass easing: the SVG displacement backdrop filter is
+ * re-rasterized on the CPU for every glass surface at each scroll commit,
+ * which made the last pages jank. While the page is actively scrolling the
+ * glass briefly switches to a plain GPU-composited backdrop blur (motion
+ * hides the difference), and the full liquid-displacement look returns the
+ * moment scrolling stops — so quality is never lost at rest.
  */
-.volt-product-glass.glass-surface--svg,
-.volt-rating-glass.glass-surface--svg,
-.volt-review-glass.glass-surface--svg {
+body.volt-is-scrolling .glass-surface--svg {
   backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
   -webkit-backdrop-filter: blur(12px) saturate(1.35) brightness(1.06);
 }
