@@ -453,6 +453,42 @@ function runBubbleCanvas(
 }
 
 export default function Home() {
+  const introVideoRef = useRef<HTMLVideoElement>(null);
+  const introStartedAt = useRef<number | null>(null);
+  const [introDone, setIntroDone] = useState(false);
+
+  // The intro plate plays once (muted) as soon as the hero is visible.
+  // Browsers block unmuted autoplay, so we force muted and kick off playback
+  // from JS after mount once the element has enough data to play.
+  useEffect(() => {
+    const v = introVideoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    let started = false;
+    const tryStart = () => {
+      if (started || !v || v.readyState < 2) return;
+      v.currentTime = 0;
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+      started = true;
+    };
+    v.addEventListener('canplay', tryStart, { once: true });
+    if (v.readyState >= 2) tryStart();
+    return () => {
+      v.removeEventListener('canplay', tryStart);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onIntroEnded = () => {
+    // The 10s intro plate has played through — leave it hidden and let the
+    // scroll-film hero carry the page from here.
+    setIntroDone(true);
+    introStartedAt.current = null;
+  };
+
   const sectionRef = useRef<HTMLElement>(null);
   const nutritionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -691,12 +727,23 @@ export default function Home() {
     const handleScroll = () => {
       // Hero is 240vh; transition happens ~85% through
       const heroEnd = window.innerHeight * 2.4 * 0.85;
-      setIsScrolled(window.scrollY > heroEnd);
+      const scrolled = window.scrollY > heroEnd;
+      setIsScrolled(scrolled);
+      // Fade the intro plate once the page starts scrolling — the scroll-film
+      // camera is coming up and the intro has done its job.
+      const stage = sectionRef.current?.querySelector('.volt-sticky-stage');
+      if (stage) {
+        stage.classList.toggle('volt-hero-scrolled', scrolled || introDone);
+      }
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [introDone]);
 
   // ---- Cinematic lerp smooth scroll (slower, fluid wheel scrolling) ----
   useEffect(() => {
@@ -852,6 +899,31 @@ export default function Home() {
     observer.observe(section);
     return () => observer.disconnect();
   }, [reducedMotion]);
+
+  // Start the intro plate once the hero is visible; on a cold visit the browser
+  // only allows autoplay when muted, which is why the video is muted.
+  useEffect(() => {
+    const hero = sectionRef.current?.querySelector('#hero');
+    if (!hero || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          const video = introVideoRef.current;
+          if (video && !video.paused) return; // already playing
+          if (video) {
+            video.currentTime = 0;
+            video.play().catch(() => {});
+            introStartedAt.current = performance.now();
+          }
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(hero);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---- Load hero frames ----
   useEffect(() => {
@@ -1623,16 +1695,65 @@ export default function Home() {
   };
 
   const on360Progress = (pct: number) => {
+    // update the can gauge liquid level
+    updateGauge(pct);
     if (pct >= 100) {
       // At the end of the orbit, reveal the destination menu (once).
       if (expDoneAt.current === null) {
         expDoneAt.current = Date.now();
         window.setTimeout(() => {
           setExpEnded((v) => (v ? v : true));
+          // trigger liquid overflow: make the liquid rise above the can
+          setTimeout(() => {
+            triggerGaugeOverflow();
+          }, 300);
         }, 650);
       }
     } else {
       expDoneAt.current = null;
+    }
+  };
+
+  // trigger the green liquid overflow when the gauge level reaches max
+  const triggerGaugeOverflow = () => {
+    const liquid = document.getElementById('volt-gauge-liquid') as SVGElement | null;
+    const shine = document.getElementById('volt-gauge-liquid-shine') as SVGElement | null;
+    const surface = document.getElementById('volt-gauge-surface') as SVGElement | null;
+    const gauge = document.getElementById('volt-can-gauge');
+    if (!liquid || !surface) return;
+    // keep the can fully filled at the moment the spill climbs out
+    liquid.setAttribute('y', '30');
+    liquid.setAttribute('height', '252');
+    surface.setAttribute('y', '30');
+    if (shine) shine.setAttribute('opacity', '1');
+    // make gauge full (overflow state)
+    if (gauge) {
+      gauge.classList.add('volt-can-gauge--full');
+      // trigger overflow animation
+      gauge.dispatchEvent(new CustomEvent('gauge-overflow'));
+    }
+  };
+
+  const updateGauge = (pct: number) => {
+    const liquid = document.getElementById('volt-gauge-liquid') as SVGElement | null;
+    const surface = document.getElementById('volt-gauge-surface') as SVGElement | null;
+    const gauge = document.getElementById('volt-can-gauge');
+    if (!liquid || !surface) return;
+    const BODY_TOP = 30;
+    const BODY_H = 252;
+    const h = pct / 100 * BODY_H;
+    const y = BODY_TOP + (BODY_H - h);
+    liquid.setAttribute('y', y.toFixed(1));
+    liquid.setAttribute('height', Math.max(h, 0.1).toFixed(1));
+    surface.setAttribute('y', y.toFixed(1));
+    if (pct >= 99.5) {
+      if (gauge && !gauge.classList.contains('volt-can-gauge--full')) {
+        gauge.classList.add('volt-can-gauge--full');
+      }
+    } else {
+      if (gauge && gauge.classList.contains('volt-can-gauge--full')) {
+        gauge.classList.remove('volt-can-gauge--full');
+      }
     }
   };
 
@@ -1778,10 +1899,22 @@ export default function Home() {
 
       <section ref={sectionRef} id="hero" className="volt-hero" aria-label="Volt energy drink hero">
         <div className="volt-sticky-stage">
+          {/* Intro commercial plate — autoplays muted once, then fades as the
+              scroll-film canvas (the product sequence) takes over. */}
+          <video
+            ref={introVideoRef}
+            className="volt-hero-intro"
+            data-done={introDone ? '1' : undefined}
+            muted
+            playsInline
+            preload="auto"
+            src="/volt-intro.mp4"
+            aria-hidden="true"
+            onEnded={onIntroEnded}
+          />
           <canvas ref={canvasRef} className="volt-canvas" aria-label="Volt can product animation" />
           <div className="volt-vignette" aria-hidden="true" />
           <div className="volt-grain" aria-hidden="true" />
-
 
           <div className="volt-copy" style={{ opacity: copyOpacity }}>
             <p className="volt-eyebrow"><span /> Charge, held in frame</p>
@@ -2341,6 +2474,45 @@ export default function Home() {
               <span aria-hidden="true">✕</span> Exit
             </button>
             <span className="volt-360-badge">VOLT · 360°</span>
+          </div>
+          {/* Left-side can scroll gauge — rises as you scroll the orbit */}
+          <div className="volt-360-gauge" id="volt-can-gauge" aria-hidden="true">
+            <svg viewBox="0 0 120 330" className="volt-can-gauge-svg" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="volt-gauge-body-clip">
+                  <rect x="30" y="30" width="60" height="252" rx="9" />
+                </clipPath>
+                <linearGradient id="volt-gauge-liquid-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7dffa8" />
+                  <stop offset="55%" stopColor="#2ee06e" />
+                  <stop offset="100%" stopColor="#0c9e47" />
+                </linearGradient>
+                <radialGradient id="volt-gauge-liquid-shine" cx="35%" cy="32%" r="70%">
+                  <stop offset="0%" stopColor="#eaffd6" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="#eaffd6" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <g clipPath="url(#volt-gauge-body-clip)">
+                <rect id="volt-gauge-liquid" className="volt-can-liquid" x="30" y="282" width="60" height="0" fill="url(#volt-gauge-liquid-grad)" />
+                <rect id="volt-gauge-liquid-shine" className="volt-can-liquid-shine" x="30" y="30" width="60" height="252" fill="url(#volt-gauge-liquid-shine)" />
+                <rect id="volt-gauge-surface" className="volt-can-surface" x="30" y="282" width="60" height="2.5" fill="#d8ffec" opacity="0.95" />
+              </g>
+              <g className="volt-can-spill" id="volt-can-spill">
+                <rect className="volt-can-spill-body" x="30" y="22" width="60" height="10" rx="5" fill="url(#volt-gauge-liquid-grad)" />
+                <circle className="volt-can-spill-drop volt-can-spill-drop--1" cx="44" cy="10" r="4.5" fill="#7dffa8" />
+                <circle className="volt-can-spill-drop volt-can-spill-drop--2" cx="68" cy="4" r="3.4" fill="#39ff88" />
+                <circle className="volt-can-spill-drop volt-can-spill-drop--3" cx="82" cy="12" r="2.6" fill="#b8ffd4" />
+              </g>
+              <g className="volt-can-gauge-lines" fill="none">
+                <rect x="20" y="4" width="80" height="12" rx="4" />
+                <rect x="26" y="16" width="68" height="10" rx="3" />
+                <rect x="30" y="30" width="60" height="252" rx="9" />
+                <rect x="26" y="284" width="68" height="10" rx="3" />
+                <rect x="20" y="294" width="80" height="12" rx="4" />
+                <line x1="40" y1="42" x2="40" y2="128" />
+                <line x1="40" y1="148" x2="40" y2="238" />
+              </g>
+            </svg>
           </div>
           <div ref={expScroller} className="volt-360-scroller">
             <Suspense fallback={null}>

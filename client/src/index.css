@@ -159,6 +159,27 @@ a:focus-visible {
   height: 100%;
 }
 
+/* ---- Hero intro commercial plate (autoplay muted once, fade on scroll / done) ---- */
+.volt-hero-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 1.4s ease;
+}
+
+.volt-hero-intro[data-done="1"],
+.volt-sticky-stage:is(.volt-hero-scrolled) .volt-hero-intro,
+.volt-sticky-stage:has(.volt-hero-intro[data-done="1"]) .volt-hero-intro {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .volt-canvas {
   z-index: 0;
   display: block;
