@@ -588,6 +588,24 @@ export default function Home() {
     }
   };
 
+  // ---- Shelf parallax: cursor position drifts the cans, deeper cans more ----
+  const shelfParallax = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch" || reducedMotion) return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return;
+    const mx = ((e.clientX - r.left) / r.width) * 2 - 1; // -1 .. 1
+    const my = ((e.clientY - r.top) / r.height) * 2 - 1;
+    el.style.setProperty("--mx", mx.toFixed(3));
+    el.style.setProperty("--my", my.toFixed(3));
+  };
+
+  const shelfParallaxReset = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
+    e.currentTarget.style.setProperty("--mx", "0");
+    e.currentTarget.style.setProperty("--my", "0");
+  };
+
   const autoAdvance = () => {
     if (prevCanRef.current !== null) return;
     const next = (canIdxRef.current + 1) % products.length;
@@ -2205,7 +2223,12 @@ export default function Home() {
             onPointerLeave={() => setCanHover(false)}
           >
             {/* the shelf — every flavor on stage at once */}
-            <div className="volt-shelf" aria-label="Flavor lineup">
+            <div
+              className={`volt-shelf${prevCanIdx !== null ? " volt-shelf--swapping" : ""}`}
+              aria-label="Flavor lineup"
+              onPointerMove={shelfParallax}
+              onPointerLeave={shelfParallaxReset}
+            >
               {products.map((p, i) => {
                 // signed circular distance from the selected can
                 const n = products.length;
@@ -2225,12 +2248,19 @@ export default function Home() {
                     aria-label={`Show ${p.name}`}
                     aria-pressed={d === 0}
                   >
-                    <img
-                      src={p.image}
-                      alt={`${p.name} can`}
-                      draggable={false}
-                      className="volt-shelf-can"
-                    />
+                    <div className="volt-shelf-par" aria-hidden="true">
+                      {d !== 0 && (
+                        <span className="volt-shelf-label" aria-hidden="true">
+                          {p.short.toUpperCase()}
+                        </span>
+                      )}
+                      <img
+                        src={p.image}
+                        alt={`${p.name} can`}
+                        draggable={false}
+                        className="volt-shelf-can"
+                      />
+                    </div>
                   </div>
                 );
               })}

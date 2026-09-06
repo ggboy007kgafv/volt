@@ -2703,10 +2703,48 @@ a:focus-visible {
   cursor: pointer;
   outline: none;
   transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.7s ease,
-    filter 0.7s ease;
+    transform 1.15s cubic-bezier(0.34, 1.3, 0.3, 1),
+    opacity 0.75s ease,
+    filter 0.75s ease;
   will-change: transform;
+}
+
+/* while swapping: transit cans get a slight motion blur, and the whole row
+   moves on staggered delays so the shuffle ripples outward from the center */
+.volt-shelf--swapping .volt-shelf-item .volt-shelf-can {
+  filter:
+    brightness(0.9)
+    drop-shadow(0 30px 50px rgba(0, 0, 0, 0.6));
+}
+.volt-shelf--swapping .volt-shelf-slot--c,
+.volt-shelf--swapping .volt-shelf-slot--l1,
+.volt-shelf--swapping .volt-shelf-slot--r1 {
+  transition-delay: 0s;
+}
+.volt-shelf--swapping .volt-shelf-slot--l2,
+.volt-shelf--swapping .volt-shelf-slot--r2 {
+  transition-delay: 0.07s;
+}
+.volt-shelf--swapping .volt-shelf-slot--f {
+  transition-delay: 0.13s;
+}
+
+/* the can entering the center: rises and settles with a soft overshoot.
+   (Keyframes live next to the slot rules; the animation itself is chained
+   with voltShelfFloat in the slot--c rule above.) */
+
+/* cursor parallax: --mx/--my are -1..1 from the pointer; each slot moves a
+   factor of that. Deeper cans drift more, so the row feels like it has real
+   depth when the mouse moves. Center can barely shifts. */
+.volt-shelf-par {
+  position: relative;
+  transform:
+    translate(
+      calc(var(--mx, 0) * var(--px, 0) * 1px),
+      calc(var(--my, 0) * var(--px, 0) * 0.45px)
+    );
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
 }
 .volt-shelf-item.is-center {
   cursor: default;
@@ -2724,9 +2762,42 @@ a:focus-visible {
   -webkit-user-drag: none;
 }
 
+/* flavor name tag floating above a side can on hover */
+.volt-shelf-label {
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  transform: translate(-50%, 6px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--acc, #39ff88) 45%, transparent);
+  background: rgba(6, 14, 9, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: color-mix(in srgb, var(--acc, #39ff88) 85%, #ffffff);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.volt-shelf-slot--l1:hover .volt-shelf-label,
+.volt-shelf-slot--r1:hover .volt-shelf-label,
+.volt-shelf-slot--l2:hover .volt-shelf-label,
+.volt-shelf-slot--r2:hover .volt-shelf-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* center: the hero can — big, upright, floating */
 .volt-shelf-slot--c {
   z-index: 9;
+  --px: 10;
   transform: translate(-50%, -54%);
 }
 .volt-shelf-slot--c .volt-shelf-can {
@@ -2734,7 +2805,9 @@ a:focus-visible {
   filter:
     drop-shadow(0 40px 70px rgba(0, 0, 0, 0.7))
     drop-shadow(0 0 50px color-mix(in srgb, var(--acc, #39ff88) 16%, transparent));
-  animation: voltShelfFloat 6.5s ease-in-out infinite;
+  animation:
+    voltShelfHero 1.2s cubic-bezier(0.34, 1.3, 0.3, 1) both,
+    voltShelfFloat 6.5s ease-in-out 1.2s infinite;
 }
 
 /* one step out: full-size side cans, slightly tilted */
@@ -2744,9 +2817,11 @@ a:focus-visible {
   opacity: 0.85;
 }
 .volt-shelf-slot--l1 {
+  --px: 26;
   transform: translate(calc(-50% - 26vw), -46%) rotateY(16deg) rotateZ(-3deg);
 }
 .volt-shelf-slot--r1 {
+  --px: 26;
   transform: translate(calc(-50% + 26vw), -46%) rotateY(-16deg) rotateZ(3deg);
 }
 .volt-shelf-slot--l1 .volt-shelf-can,
@@ -2774,9 +2849,11 @@ a:focus-visible {
   opacity: 0.55;
 }
 .volt-shelf-slot--l2 {
+  --px: 42;
   transform: translate(calc(-50% - 41vw), -40%) rotateY(26deg) rotateZ(-6deg);
 }
 .volt-shelf-slot--r2 {
+  --px: 42;
   transform: translate(calc(-50% + 41vw), -40%) rotateY(-26deg) rotateZ(6deg);
 }
 .volt-shelf-slot--l2 .volt-shelf-can,
@@ -2802,6 +2879,7 @@ a:focus-visible {
   pointer-events: none;
 }
 .volt-shelf-slot--f {
+  --px: 56;
   transform: translate(-50%, -36%) rotateY(30deg);
 }
 .volt-shelf-slot--f .volt-shelf-can {
@@ -2815,6 +2893,20 @@ a:focus-visible {
   }
   50% {
     transform: translateY(-13px) rotateY(6deg);
+  }
+}
+
+/* entrance of the can sliding into the hero slot: rises, settles, unblurs */
+@keyframes voltShelfHero {
+  0% {
+    opacity: 0;
+    transform: translateY(46px) scale(0.9) rotateY(-14deg);
+    filter: brightness(1.25) blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateY(0deg);
+    filter: brightness(1) blur(0);
   }
 }
 
@@ -2939,6 +3031,9 @@ a:focus-visible {
   }
   .volt-shelf {
     height: clamp(300px, 50vh, 440px);
+  }
+  .volt-shelf-par {
+    transform: none; /* no cursor parallax on touch layouts */
   }
   .volt-shelf-slot--c {
     transform: translate(-50%, -50%);
