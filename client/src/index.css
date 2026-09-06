@@ -985,6 +985,8 @@ a:focus-visible {
     right: 24px;
     left: 24px;
     max-width: none;
+    width: auto;
+    transform: none; /* base rule centers via translateX(-50%); pinning left/right replaces that */
     text-align: center;
   }
 
@@ -3097,7 +3099,6 @@ a:focus-visible {
     font-size: 8.5px;
     letter-spacing: 0.34em;
   }
-}
   .volt-shelf-slot--c {
     transform: translate(-50%, -50%);
   }
@@ -3459,6 +3460,36 @@ body.volt-is-scrolling .glass-surface--svg {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+/* ============================================================
+   Liquid cursor — WebGL soda trail over Products & Reviews
+   ============================================================ */
+
+.volt-liquid-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 40; /* above section content, below the nav (z-800) */
+  pointer-events: none;
+  mix-blend-mode: screen; /* liquid reads as light on the dark studio bg */
+}
+
+.volt-liquid-lens {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 41;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle, rgba(57, 255, 136, 0.05), rgba(57, 255, 136, 0) 68%);
+  border: 1px solid rgba(57, 255, 136, 0.14);
+  will-change: transform, opacity;
 }
 
 /* ============================================================

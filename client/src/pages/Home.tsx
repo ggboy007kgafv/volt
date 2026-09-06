@@ -10,6 +10,7 @@ import GlassSurface from "@/components/GlassSurface";
 import MaskedHeading from "@/components/MaskedHeading";
 import LiquidTransition, { LiquidTransitionHandle } from "@/components/LiquidTransition";
 import SupportChat from "@/components/SupportChat";
+import LiquidCursor from "@/components/LiquidCursor";
 
 import { SECTION2_FRAME_SOURCES } from "@/lib/section2FrameSources";
 import { VOLT_FRAME_SOURCES } from "@/lib/voltFrameSources";
@@ -23,6 +24,9 @@ const FRAME_SOURCES = VOLT_FRAME_SOURCES;
 // lazily so it only downloads the moment the viewer is opened, keeping the
 // initial bundle small.
 const AboutExperience = lazy(() => import("@/components/AboutExperience"));
+
+// Sections the WebGL liquid-cursor trail responds over (Products + Reviews).
+const LIQUID_TARGETS = ["#products", "#reviews"];
 
 const nutritionRows = [
   { label: "Calories", value: 160, unit: "kcal" },
@@ -2711,6 +2715,9 @@ export default function Home() {
 
       {/* Floating AI support assistant */}
       <SupportChat />
+
+      {/* WebGL liquid-cursor trail — active only over Products & Reviews */}
+      <LiquidCursor targets={LIQUID_TARGETS} />
     </main>
   );
 }
