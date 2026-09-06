@@ -168,6 +168,102 @@ function OrbitCam({ progressRef }: { progressRef: React.RefObject<number> }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Can-shaped custom scroll gauge — the can fills with green liquid    */
+/* as you scroll the orbit, and overflows when you reach the end.      */
+/* ------------------------------------------------------------------ */
+function CanGauge({ progressRef }: { progressRef: React.RefObject<number> }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const liquidRef = useRef<SVGRectElement>(null);
+  const surfaceRef = useRef<SVGRectElement>(null);
+  const lastFull = useRef(false);
+  const fullShown = useRef(false);
+  const BODY_TOP = 30;
+  const BODY_H = 252;
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const el = liquidRef.current;
+      const surf = surfaceRef.current;
+      if (!el || !surf) return;
+      const p = clamp01(progressRef.current ?? 0);
+      const h = p * BODY_H;
+      const y = BODY_TOP + (BODY_H - h);
+      el.setAttribute("y", String(y));
+      el.setAttribute("height", String(Math.max(h, 0.01)));
+      surf.setAttribute("y", String(y));
+      const full = p >= 0.999;
+      if (full !== lastFull.current) {
+        lastFull.current = full;
+        rootRef.current?.classList.toggle("volt-can-gauge--full", full);
+        if (full && !fullShown.current) {
+          fullShown.current = true;
+          const spill = rootRef.current?.querySelector(".volt-can-spill");
+          if (spill) {
+            spill.classList.remove("volt-can-spill--run");
+            void (spill as HTMLElement).offsetWidth;
+            spill.classList.add("volt-can-spill--run");
+          }
+        }
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [progressRef]);
+
+  return (
+    <div ref={rootRef} className="volt-can-gauge" aria-hidden="true">
+      <svg viewBox="0 0 120 330" className="volt-can-gauge-svg">
+        <defs>
+          <clipPath id="volt-gauge-body-clip">
+            <rect x="30" y="30" width="60" height="252" rx="9" />
+          </clipPath>
+          <linearGradient id="volt-gauge-liquid-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#7dffa8" />
+            <stop offset="55%" stopColor="#2ee06e" />
+            <stop offset="100%" stopColor="#0c9e47" />
+          </linearGradient>
+        </defs>
+
+        {/* green liquid inside the can body */}
+        <g clipPath="url(#volt-gauge-body-clip)">
+          <rect
+            ref={liquidRef}
+            className="volt-can-liquid"
+            x="30"
+            y="282"
+            width="60"
+            height="0"
+            fill="url(#volt-gauge-liquid-grad)"
+          />
+          <rect ref={surfaceRef} className="volt-can-liquid-surface" x="30" y="282" width="60" height="2.5" fill="#c8ffe0" opacity="0.9" />
+        </g>
+
+        {/* liquid raising out of the can when the orbit completes */}
+        <g className="volt-can-spill">
+          <rect className="volt-can-spill-body" x="30" y="22" width="60" height="10" rx="5" fill="url(#volt-gauge-liquid-grad)" />
+          <circle className="volt-can-spill-drop volt-can-spill-drop--1" cx="44" cy="10" r="4.5" fill="#7dffa8" />
+          <circle className="volt-can-spill-drop volt-can-spill-drop--2" cx="68" cy="4" r="3.4" fill="#39ff88" />
+          <circle className="volt-can-spill-drop volt-can-spill-drop--3" cx="82" cy="12" r="2.6" fill="#b8ffd4" />
+        </g>
+
+        {/* outline — drawn last so edges stay crisp over the liquid */}
+        <g className="volt-can-gauge-lines" fill="none">
+          <rect x="20" y="4" width="80" height="12" rx="4" />
+          <rect x="26" y="16" width="68" height="10" rx="3" />
+          <rect x="30" y="30" width="60" height="252" rx="9" />
+          <rect x="26" y="284" width="68" height="10" rx="3" />
+          <rect x="20" y="294" width="80" height="12" rx="4" />
+          <line x1="40" y1="42" x2="40" y2="128" />
+          <line x1="40" y1="148" x2="40" y2="238" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Atmosphere                                                          */
 /* ------------------------------------------------------------------ */
 function Particles({
@@ -380,6 +476,8 @@ export default function AboutExperience({ overlay = false, scrollRef, onProgress
 
         <div className="volt-vignette" aria-hidden="true" />
         <div className="volt-grain" aria-hidden="true" />
+
+        {active && <CanGauge progressRef={progressRef} />}
 
         {active && loadState === "loading" && (
           <div className="volt-exp-loading" role="status">

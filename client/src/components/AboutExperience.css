@@ -128,6 +128,114 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Can-shaped custom scroll gauge — left side, vertically centered.    */
+/* Green liquid rises with scroll progress and overflows at 100%.      */
+/* ------------------------------------------------------------------ */
+
+.volt-can-gauge {
+  position: absolute;
+  left: clamp(18px, 3vw, 40px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 7;
+  width: clamp(46px, 6vw, 66px);
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 18px rgba(57, 255, 136, 0.16));
+  transition: filter 0.6s ease, opacity 0.6s ease;
+}
+
+.volt-can-gauge-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.volt-can-liquid {
+  will-change: y, height;
+}
+
+.volt-can-liquid-shine {
+  will-change: opacity;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.volt-can-gauge--full .volt-can-liquid-shine {
+  opacity: 1;
+}
+
+.volt-can-surface {
+  will-change: y;
+}
+
+.volt-can-gauge-lines {
+  stroke: rgba(167, 255, 201, 0.85);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.volt-can-gauge--full {
+  opacity: 1;
+  filter: drop-shadow(0 0 28px rgba(57, 255, 136, 0.5));
+}
+
+/* liquid raising out of the can when the orbit completes */
+.volt-can-spill {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.volt-can-spill--run {
+  opacity: 1;
+  transform: translateY(-34px);
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+
+.volt-can-spill-body {
+  will-change: transform;
+}
+
+.volt-can-spill-drop {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.volt-can-spill--run .volt-can-spill-drop {
+  animation: volt-gauge-drop-rise 1.4s ease-out forwards;
+}
+
+.volt-can-spill-drop--1 { animation-delay: 0.1s; }
+.volt-can-spill-drop--2 { animation-delay: 0.35s; }
+.volt-can-spill-drop--3 { animation-delay: 0.6s; }
+
+@keyframes volt-gauge-drop-rise {
+  0% { opacity: 0; transform: translateY(10px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-34px); }
+}
+
+/* liquid surface breathes when the can is full */
+.volt-can-gauge--full .volt-can-liquid-surface {
+  animation: volt-gauge-surface-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes volt-gauge-surface-glow {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .volt-can-gauge {
+    left: 12px;
+    width: 38px;
+    opacity: 0.8;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* On-demand overlay shell (opened from the film-page CTA)             */
 /* ------------------------------------------------------------------ */
 

@@ -159,24 +159,64 @@ a:focus-visible {
   height: 100%;
 }
 
-/* ---- Hero intro commercial plate (autoplay muted once, fade on scroll / done) ---- */
-.volt-hero-intro {
+/* ---- Website intro: full-screen commercial plate shown once on load ---- */
+.volt-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: #040a07;
+  opacity: 1;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
+}
+
+.volt-intro-video {
   position: absolute;
   inset: 0;
-  z-index: 2;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 1.4s ease;
+  object-position: center;
 }
 
-.volt-hero-intro[data-done="1"],
-.volt-sticky-stage:is(.volt-hero-scrolled) .volt-hero-intro,
-.volt-sticky-stage:has(.volt-hero-intro[data-done="1"]) .volt-hero-intro {
+/* soft bottom scrim so the skip chip always reads */
+.volt-intro::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, rgba(2, 8, 5, 0.55));
+  pointer-events: none;
+}
+
+.volt-intro-skip {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  z-index: 2;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(233, 255, 240, 0.28);
+  background: rgba(8, 20, 13, 0.45);
+  color: rgba(233, 255, 240, 0.92);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.volt-intro-skip:hover {
+  background: rgba(57, 255, 136, 0.16);
+  border-color: rgba(157, 255, 194, 0.65);
+}
+
+/* dismissed: fade out, let the page receive all input during the fade */
+.volt-intro--done {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
@@ -1758,6 +1798,1224 @@ a:focus-visible {
   }
 }
 
+
+/* ============================================================
+   Products — cinematic FIND YOUR VOLT. flavor experience
+   ============================================================ */
+
+.volt-find-products {
+  background:
+    radial-gradient(ellipse 120% 70% at 16% -12%, rgba(7, 30, 18, 0.9), transparent 60%),
+    radial-gradient(ellipse 60% 46% at 90% 112%, rgba(9, 32, 19, 0.75), transparent 66%),
+    #050505;
+}
+
+/* --- Flavor atmosphere: ghost word + accent orb --- */
+.volt-find-atmo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.volt-find-ghost {
+  position: absolute;
+  right: -3vw;
+  bottom: -7vh;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(280px, 44vw, 620px);
+  font-weight: 400;
+  line-height: 0.75;
+  letter-spacing: 0.02em;
+  opacity: 0.055;
+  transition: color 1s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.volt-find-orb {
+  position: absolute;
+  left: 46%;
+  top: 34%;
+  width: min(72vw, 840px);
+  height: min(72vw, 840px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.13;
+  transition: background-color 1s ease, opacity 1s ease;
+}
+
+/* --- Layout: left headline / center can / right info --- */
+.volt-find-inner {
+  padding-top: clamp(120px, 14vh, 180px);
+  padding-bottom: clamp(90px, 12vh, 150px);
+}
+
+.volt-find-layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(250px, 1.08fr) minmax(320px, 1.06fr) minmax(250px, 1fr);
+  align-items: center;
+  gap: clamp(12px, 2vw, 36px);
+}
+
+/* --- Left: editorial headline --- */
+.volt-find-left {
+  position: relative;
+  z-index: 2;
+}
+
+.volt-find-micro {
+  margin: 0 0 16px;
+  color: #7dffa8;
+  font-size: 10.5px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.volt-find-micro span {
+  color: #b9f44a;
+}
+
+.volt-find-title {
+  margin: 0 0 20px;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(62px, 8.4vw, 148px);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  text-shadow: 0 4px 44px rgba(0, 0, 0, 0.65);
+}
+
+.volt-find-title .volt-find-line {
+  display: block;
+}
+
+.volt-find-line--outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.72);
+  text-shadow: none;
+}
+
+.volt-find-line--accent {
+  background: linear-gradient(96deg, #b9f44a 4%, #39ff88 58%, #2ee97c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+.volt-find-dot {
+  color: #7dffa8;
+}
+
+.volt-find-sub {
+  margin: 0;
+  color: #cfe4d3;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+/* --- Center: the can stage --- */
+.volt-find-stage {
+  position: relative;
+  height: clamp(380px, 60vh, 620px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.volt-find-can-row {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.volt-find-can {
+  position: absolute;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  will-change: transform, opacity, filter;
+}
+
+/* the selected can: large, floating, subtle 3D sway */
+.volt-find-can--hero {
+  position: relative;
+  z-index: 3;
+  height: clamp(320px, 56vh, 560px);
+  animation: voltFindHeroMotion 7s ease-in-out infinite;
+  filter: drop-shadow(0 30px 52px rgba(0, 0, 0, 0.62)) drop-shadow(0 0 34px rgba(57, 255, 136, 0.14));
+}
+
+@keyframes voltFindHeroMotion {
+  0%, 100% {
+    transform: translateY(0) rotateY(-6deg);
+  }
+  50% {
+    transform: translateY(-16px) rotateY(6deg);
+  }
+}
+
+/* side cans peek from the edges, dimmed, angled for depth.
+   The source PNGs are wide (669×373) with the can centered, so the
+   strip is shifted ~40% to plant the can silhouette on the stage edge. */
+.volt-find-can--side {
+  z-index: 1;
+  height: clamp(130px, 20vh, 210px);
+  opacity: 0.5;
+  filter: brightness(0.7) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55));
+  transition: opacity 0.55s ease, filter 0.55s ease, transform 0.55s ease;
+}
+.volt-find-can--prev {
+  left: 0%;
+  transform: translateX(-40%) rotateY(16deg);
+}
+.volt-find-can--next {
+  right: 0%;
+  transform: translateX(40%) rotateY(-16deg);
+}
+
+/* swap transitions (class names kept from the old carousel) */
+.volt-find-can--hero.enter-next {
+  animation: voltFindInNext 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-find-can--hero.enter-prev {
+  animation: voltFindInPrev 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-find-can--leave {
+  z-index: 2;
+  height: clamp(290px, 50vh, 500px);
+}
+.volt-find-can--leave.leave-next {
+  animation: voltFindOutNext 0.72s cubic-bezier(0.6, 0, 0.6, 0.2) both;
+}
+.volt-find-can--leave.leave-prev {
+  animation: voltFindOutPrev 0.72s cubic-bezier(0.6, 0, 0.6, 0.2) both;
+}
+
+@keyframes voltFindInNext {
+  from { transform: translateX(46%) scale(0.82) rotateY(-14deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes voltFindInPrev {
+  from { transform: translateX(-46%) scale(0.82) rotateY(14deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes voltFindOutNext {
+  from { transform: none; opacity: 1; }
+  to { transform: translateX(-46%) scale(0.8) rotateY(14deg); opacity: 0.5; }
+}
+@keyframes voltFindOutPrev {
+  from { transform: none; opacity: 1; }
+  to { transform: translateX(46%) scale(0.8) rotateY(-14deg); opacity: 0.5; }
+}
+
+/* studio glow + floor reflection, tinted by the selected flavor */
+.volt-find-glow {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(58vw, 560px);
+  height: min(58vw, 560px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--acc, #39ff88);
+  filter: blur(96px);
+  opacity: 0.2;
+  transition: opacity 1s ease;
+  animation: voltGlowPulse 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.volt-find-reflection {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  width: min(42vw, 400px);
+  height: 72px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--acc, #39ff88), transparent 70%);
+  filter: blur(16px);
+  opacity: 0.42;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+
+/* --- Right: flavor info --- */
+.volt-find-info {
+  position: relative;
+  z-index: 2;
+  animation: voltDetailIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.volt-find-name {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(40px, 4.8vw, 70px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
+}
+
+.volt-find-name-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.55em);
+  filter: blur(10px);
+  animation: voltFindLetterIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes voltFindLetterIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.volt-find-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 4px 0 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(185, 244, 74, 0.16);
+}
+
+.volt-find-price-num {
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(36px, 4.2vw, 56px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.volt-find-price-unit {
+  color: #8ba391;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* premium glass CTA */
+.volt-find-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #eafff2;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s ease,
+    box-shadow 0.4s ease,
+    background 0.4s ease;
+}
+.volt-find-cta:hover {
+  transform: translateY(-2px);
+  border-color: rgba(157, 255, 194, 0.6);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(57, 255, 136, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.volt-find-cta-arrow {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.volt-find-cta:hover .volt-find-cta-arrow {
+  transform: translateX(6px);
+}
+
+/* --- Bottom: horizontal flavor navigation --- */
+.volt-find-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 26px);
+  margin-top: clamp(36px, 6.5vh, 74px);
+}
+
+.volt-find-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: #6f8378;
+  cursor: pointer;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition: color 0.35s ease;
+}
+.volt-find-tab:hover {
+  color: #d9f0de;
+}
+.volt-find-tab.active {
+  color: #ffffff;
+}
+.volt-find-tab-idx {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: #7dffa8;
+  opacity: 0.75;
+}
+.volt-find-tab-line {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 3px;
+  height: 2px;
+  background: var(--acc, #b9f44a);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 12px var(--acc, #b9f44a);
+}
+.volt-find-tab.active .volt-find-tab-line {
+  transform: scaleX(1);
+}
+
+@media (max-width: 900px) {
+  .volt-find-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .volt-find-left {
+    text-align: center;
+  }
+
+  .volt-find-title {
+    font-size: clamp(58px, 15.5vw, 100px);
+  }
+
+  .volt-find-stage {
+    height: clamp(330px, 56vh, 470px);
+  }
+
+  .volt-find-can--hero {
+    height: clamp(250px, 44vh, 380px);
+  }
+
+  .volt-find-can--side {
+    display: none;
+  }
+
+  .volt-find-info {
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .volt-find-info .volt-product-desc {
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .volt-find-price {
+    justify-content: center;
+  }
+
+  .volt-find-cta {
+    margin: 0 auto;
+  }
+
+  .volt-find-nav {
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    margin-top: 34px;
+  }
+
+  .volt-find-tab {
+    padding: 8px 10px;
+    font-size: 13.5px;
+  }
+
+  .volt-find-ghost {
+    right: -14vw;
+    bottom: -4vh;
+    font-size: clamp(220px, 62vw, 420px);
+  }
+}
+
+/* --- Ciao-style chapter head + giant two-line flavor wordmark --- */
+
+.volt-find-head {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.volt-find-head .volt-find-micro {
+  margin-bottom: 12px;
+}
+
+.volt-find-head .volt-find-title {
+  margin: 0 0 14px;
+  font-size: clamp(50px, 6vw, 116px);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.volt-find-title-acc {
+  background: linear-gradient(96deg, #b9f44a 4%, #39ff88 58%, #2ee97c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.volt-find-head .volt-find-sub {
+  color: #cfe4d3;
+}
+
+/* --- Hero band: giant name | can --- */
+.volt-find-hero {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.92fr);
+  align-items: center;
+  gap: clamp(12px, 3vw, 54px);
+  min-height: clamp(430px, 64vh, 680px);
+  margin-top: clamp(34px, 5.5vh, 62px);
+}
+
+/* left: giant stacked flavor name */
+.volt-find-nameblock {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+}
+
+.volt-find-giant-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.volt-find-giant {
+  display: block;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(58px, 8.4vw, 150px);
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.volt-find-giant--top {
+  color: #ffffff;
+  text-shadow: 0 4px 44px rgba(0, 0, 0, 0.55);
+}
+
+.volt-find-giant--bot {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--acc, #39ff88);
+  text-shadow: none;
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--acc, #39ff88) 45%, transparent));
+}
+
+.volt-find-nameinfo {
+  margin-top: 30px;
+  max-width: 480px;
+}
+
+.volt-find-blurb {
+  margin: 8px 0 16px;
+  color: #cfe4d3;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  max-width: 430px;
+}
+
+.volt-find-pricerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  margin-top: 24px;
+}
+
+.volt-find-price {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  border-top: none;
+}
+
+.volt-find-price-num {
+  font-size: clamp(34px, 3.4vw, 52px);
+}
+
+/* right: the can stage inside the hero band */
+.volt-find-hero .volt-find-stage {
+  position: relative;
+  height: clamp(380px, 60vh, 640px);
+}
+
+.volt-find-hero .volt-find-can--hero {
+  height: clamp(300px, 52vh, 540px);
+}
+
+@media (max-width: 900px) {
+  .volt-find-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  .volt-find-head .volt-find-title {
+    white-space: normal;
+    font-size: clamp(46px, 13vw, 84px);
+    line-height: 1;
+  }
+
+  .volt-find-nameblock {
+    text-align: center;
+  }
+
+  .volt-find-nameinfo {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .volt-find-blurb {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .volt-find-pricerow {
+    justify-content: center;
+  }
+
+  .volt-find-hero .volt-find-stage {
+    height: clamp(320px, 54vh, 460px);
+    order: -1;
+  }
+
+  .volt-find-hero .volt-find-can--hero {
+    height: clamp(250px, 42vh, 380px);
+  }
+}
+
+/* --- Ciao-style family lineup drifting behind the hero --- */
+.volt-find-lineup {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.volt-find-back-can {
+  position: absolute;
+  top: 50%;
+  width: clamp(104px, 14vw, 178px);
+  height: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+  filter: brightness(0.6) saturate(0.85) drop-shadow(0 20px 28px rgba(0, 0, 0, 0.55));
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 0.55s ease, filter 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.volt-find-back-can:hover {
+  z-index: 4;
+  opacity: 0.92;
+  filter: brightness(1.08) saturate(1.1) drop-shadow(0 26px 34px rgba(0, 0, 0, 0.6));
+  transform: translate(-50%, -50%) scale(1.09);
+}
+
+.volt-find-back-can.is-active {
+  opacity: 0.85;
+  filter: brightness(1.28) saturate(1.18)
+    drop-shadow(0 0 26px color-mix(in srgb, var(--acc, #39ff88) 55%, transparent));
+  animation: voltBackOn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes voltBackOn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+/* keep the giant name + front can above the drifting lineup */
+.volt-find-nameblock {
+  z-index: 3;
+}
+.volt-find-hero .volt-find-stage {
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .volt-find-lineup {
+    display: none;
+  }
+}
+
+/* --- Ciao DOUBLE/LITCHI hero: big can center, family behind, name bottom --- */
+.volt-find-hero {
+  display: block;
+  min-height: 0;
+  text-align: center;
+  margin-top: clamp(18px, 3vh, 40px);
+}
+
+.volt-ring {
+  position: relative;
+  width: 100%;
+  height: clamp(330px, 60vh, 640px);
+  margin: 0 auto;
+  perspective: 1500px;
+}
+
+.volt-ring-item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.85s ease, filter 0.85s ease;
+}
+.volt-ring-item.is-center {
+  cursor: default;
+}
+
+.volt-ring-can {
+  display: block;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* slot geometry (anchored on the item center, offsets in viewport units so the
+   wide transparent can PNGs don't shift the layout) */
+.volt-ring-slot--c {
+  z-index: 9;
+  transform: translate(-50%, -55%);
+}
+.volt-ring-slot--c .volt-ring-can {
+  height: clamp(300px, 50vh, 540px);
+  filter: drop-shadow(0 34px 60px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 40px rgba(57, 255, 136, 0.12));
+  animation: voltRingFloat 6.5s ease-in-out infinite;
+}
+
+.volt-ring-slot--l {
+  z-index: 5;
+  transform: translate(calc(-50% - 30vw), -46%);
+  opacity: 0.8;
+}
+.volt-ring-slot--r {
+  z-index: 5;
+  transform: translate(calc(-50% + 30vw), -46%);
+  opacity: 0.8;
+}
+.volt-ring-slot--l .volt-ring-can,
+.volt-ring-slot--r .volt-ring-can {
+  height: clamp(170px, 27vh, 300px);
+  filter: brightness(0.78) saturate(0.95) drop-shadow(0 22px 34px rgba(0, 0, 0, 0.55));
+}
+.volt-ring-slot--l:hover,
+.volt-ring-slot--r:hover {
+  z-index: 8;
+  transform: translate(calc(-50% - 30vw), -52%);
+  opacity: 1;
+  filter: brightness(1.05);
+}
+.volt-ring-slot--r:hover {
+  transform: translate(calc(-50% + 30vw), -52%);
+}
+
+.volt-ring-slot--f {
+  z-index: 2;
+  transform: translate(-50%, calc(-50% - 21vh));
+  opacity: 0.5;
+  cursor: pointer;
+}
+.volt-ring-slot--f .volt-ring-can {
+  height: clamp(110px, 18vh, 190px);
+  filter: brightness(0.6) blur(1.6px) drop-shadow(0 16px 26px rgba(0, 0, 0, 0.5));
+}
+.volt-ring-slot--f:hover {
+  opacity: 0.9;
+  z-index: 7;
+}
+
+@keyframes voltRingFloat {
+  0%, 100% {
+    transform: translateY(0) rotateY(-7deg);
+  }
+  50% {
+    transform: translateY(-14px) rotateY(7deg);
+  }
+}
+
+.volt-ring .volt-find-glow {
+  z-index: 1;
+}
+.volt-ring .volt-find-reflection {
+  z-index: 3;
+  bottom: 4%;
+}
+
+/* bottom giant two-line name, Ciao DOUBLE / LITCHI style */
+.volt-find-tagline {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-top: clamp(4px, 0.8vh, 14px);
+}
+.volt-find-tagline--l1 {
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(56px, 8.2vw, 148px);
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 44px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+.volt-find-tagline--l2 {
+  color: rgba(255, 255, 255, 0.62);
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(46px, 6.6vw, 118px);
+  line-height: 0.85;
+  letter-spacing: 0.34em;
+  text-shadow: 0 3px 34px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .volt-ring {
+    height: clamp(300px, 52vh, 460px);
+  }
+  .volt-ring-slot--l {
+    transform: translate(calc(-50% - 25vw), -44%);
+  }
+  .volt-ring-slot--r {
+    transform: translate(calc(-50% + 25vw), -44%);
+  }
+  .volt-ring-slot--l:hover {
+    transform: translate(calc(-50% - 25vw), -50%);
+  }
+  .volt-ring-slot--r:hover {
+    transform: translate(calc(-50% + 25vw), -50%);
+  }
+  .volt-ring-slot--c .volt-ring-can {
+    height: clamp(230px, 40vh, 380px);
+  }
+  .volt-ring-slot--l .volt-ring-can,
+  .volt-ring-slot--r .volt-ring-can {
+    height: clamp(120px, 20vh, 190px);
+  }
+  .volt-find-tagline--l1 {
+    font-size: clamp(46px, 12.5vw, 86px);
+  }
+  .volt-find-tagline--l2 {
+    font-size: clamp(36px, 10vw, 68px);
+  }
+}
+
+/* --- Ciao showcase: one big can, family low behind, stacked name under --- */
+.volt-ciao-inner {
+  padding-top: clamp(56px, 6.5vh, 92px);
+}
+
+.volt-ciao {
+  position: relative;
+  z-index: 2;
+}
+
+.volt-ciao-stage {
+  position: relative;
+  height: clamp(380px, 62vh, 680px);
+  perspective: 1200px;
+}
+
+/* hero can: tall, centered, standing on the stage floor */
+.volt-ciao-big {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 3;
+  animation: voltCiaoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-ciao-big img {
+  display: block;
+  height: clamp(310px, 54vh, 580px);
+  width: auto;
+  filter: drop-shadow(0 40px 70px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 44px rgba(57, 255, 136, 0.12));
+  animation: voltRingFloat 7s ease-in-out infinite;
+}
+
+@keyframes voltCiaoIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(26px) scale(0.96);
+  }
+}
+
+/* accent halo on the floor behind the can */
+.volt-ciao-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -4%;
+  width: min(76vw, 760px);
+  height: min(46vw, 400px);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--acc, #39ff88);
+  filter: blur(95px);
+  opacity: 0.16;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 1s ease;
+  animation: voltGlowPulse 5s ease-in-out infinite;
+}
+
+/* the family: small cans standing low at the stage edges, behind the hero */
+.volt-ciao-back {
+  position: absolute;
+  bottom: 4%;
+  z-index: 2;
+  padding: 0;
+  border: none;
+  background: none;
+  transform: translateX(-50%);
+  cursor: pointer;
+  opacity: 0.85;
+  outline: none;
+}
+.volt-ciao-back img {
+  display: block;
+  height: clamp(120px, 19vh, 230px);
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0.84) saturate(0.95) drop-shadow(0 16px 22px rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: filter 0.35s ease, transform 0.35s ease;
+}
+.volt-ciao-back:hover img {
+  filter: brightness(1.1) drop-shadow(0 20px 28px rgba(0, 0, 0, 0.6));
+  transform: translateY(-5px);
+}
+.volt-ciao-back.is-far img {
+  height: clamp(72px, 12vh, 150px);
+  filter: brightness(0.6) saturate(0.85) blur(1.2px) drop-shadow(0 12px 18px rgba(0, 0, 0, 0.5));
+  opacity: 0.8;
+}
+
+/* stacked flavor name under the can, Ciao DOUBLE / LITCHI style */
+.volt-ciao-name {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: clamp(2px, 0.4vh, 8px);
+  padding-bottom: clamp(10px, 2vh, 24px);
+}
+.volt-ciao-name--l1 {
+  color: #ffffff;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(50px, 7vw, 128px);
+  line-height: 0.86;
+  letter-spacing: 0.03em;
+  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+.volt-ciao-name--l2 {
+  color: rgba(233, 255, 240, 0.6);
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(48px, 6.6vw, 120px);
+  line-height: 0.88;
+  letter-spacing: 0.4em;
+  margin-left: 0.4em;
+  text-shadow: 0 3px 30px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.volt-ciao-inner .volt-find-nav {
+  margin-top: clamp(26px, 4vh, 52px);
+}
+
+@media (max-width: 900px) {
+  .volt-ciao-stage {
+    height: clamp(300px, 48vh, 440px);
+  }
+  .volt-ciao-big img {
+    height: clamp(230px, 40vh, 360px);
+  }
+  .volt-ciao-back img {
+    height: clamp(90px, 14vh, 160px);
+  }
+  .volt-ciao-back.is-far {
+    display: none;
+  }
+  .volt-ciao-name--l1 {
+    font-size: clamp(42px, 11vw, 76px);
+  }
+  .volt-ciao-name--l2 {
+    font-size: clamp(38px, 10vw, 68px);
+  }
+}
+
+/* --- Ciao hero: giant name left, big can right, faded family behind --- */
+.volt-ciao {
+  position: relative;
+  z-index: 2;
+  min-height: clamp(540px, 86vh, 820px);
+}
+
+/* deep faded family, spread behind the whole hero */
+.volt-ghosts {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.volt-ghost-can {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: auto;
+  opacity: 0.16;
+  filter: brightness(0.55) saturate(0.65) blur(3px) drop-shadow(0 14px 20px rgba(0, 0, 0, 0.4));
+  animation: voltGhostBreathe 9s ease-in-out infinite, voltGhostIn 1.3s ease both;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+@keyframes voltGhostBreathe {
+  0%, 100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes voltGhostIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
+
+.volt-ciao-cols {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(320px, 0.94fr);
+  align-items: center;
+  gap: clamp(10px, 2vw, 44px);
+  min-height: clamp(520px, 82vh, 800px);
+}
+
+/* left column: giant stacked name + details */
+.volt-ciao-side {
+  min-width: 0;
+}
+.volt-ciao-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  color: #7dffa8;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.volt-ciao-eyebrow span {
+  width: 26px;
+  height: 1px;
+  background: #b9f44a;
+}
+
+.volt-ciao-name {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 24px;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(58px, 7.6vw, 142px);
+  line-height: 0.84;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.volt-ciao-name--l1 {
+  color: #ffffff;
+  text-shadow: 0 4px 44px rgba(0, 0, 0, 0.55);
+}
+.volt-ciao-name--l2 {
+  color: rgba(233, 255, 240, 0.62);
+  letter-spacing: 0.38em;
+  margin-left: 0.38em;
+  text-shadow: 0 3px 30px rgba(0, 0, 0, 0.5);
+}
+
+.volt-ciao-desc {
+  margin: 0 0 22px;
+  max-width: 430px;
+  color: #cfe4d3;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.volt-ciao-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 28px;
+}
+.volt-ciao-meta .volt-find-price {
+  margin: 0;
+  padding: 0;
+  border-top: none;
+}
+.volt-ciao-meta .volt-find-price-num {
+  font-size: clamp(34px, 3.6vw, 54px);
+}
+
+/* right column: the big can on its studio light */
+.volt-ciao-can {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.volt-ciao-can-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  width: min(46vw, 540px);
+  height: min(30vw, 300px);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--acc, #39ff88);
+  filter: blur(85px);
+  opacity: 0.2;
+  pointer-events: none;
+  animation: voltGlowPulse 5s ease-in-out infinite;
+}
+.volt-ciao-can-img {
+  position: relative;
+  z-index: 2;
+  animation: voltCiaoIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.volt-ciao-can-img img {
+  display: block;
+  height: clamp(300px, 52vh, 560px);
+  width: auto;
+  filter: drop-shadow(0 40px 70px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 44px rgba(57, 255, 136, 0.12));
+  animation: voltRingFloat 7s ease-in-out infinite;
+}
+
+/* nav arrows at the hero edges */
+.volt-ciao .volt-can-nav {
+  top: 48%;
+}
+.volt-ciao .volt-can-prev {
+  left: -4px;
+}
+.volt-ciao .volt-can-next {
+  right: -4px;
+}
+
+@media (max-width: 900px) {
+  .volt-ciao {
+    min-height: 0;
+  }
+  .volt-ciao-cols {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    text-align: center;
+  }
+  .volt-ciao-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .volt-ciao-eyebrow {
+    justify-content: center;
+  }
+  .volt-ciao-name {
+    align-items: center;
+    font-size: clamp(48px, 12.5vw, 84px);
+  }
+  .volt-ciao-name--l2 {
+    margin-left: 0;
+  }
+  .volt-ciao-desc {
+    max-width: 90%;
+  }
+  .volt-ciao-meta {
+    justify-content: center;
+  }
+  .volt-ciao-can {
+    order: -1;
+    height: clamp(300px, 50vh, 430px);
+  }
+  .volt-ciao-can-img img {
+    height: clamp(230px, 40vh, 340px);
+  }
+}
 
 /* --- Full-lineup grid below the selector --- */
 .volt-grid-label {

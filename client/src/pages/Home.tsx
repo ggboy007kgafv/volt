@@ -68,6 +68,7 @@ const products = [
   {
     id: "strawberry",
     name: "Strawberry Strike",
+    short: "Strawberry",
     image: "/products/strawberry.webp",
     accent: "#ff5b7f",
     description: "Bright, jammy strawberry rush with a clean electric finish.",
@@ -78,6 +79,7 @@ const products = [
   {
     id: "orange",
     name: "Orange Strike",
+    short: "Orange",
     image: "/products/orange.webp",
     accent: "#ff9330",
     description: "Bold sun-ripened orange heat with a sharp, zesty buzz.",
@@ -88,6 +90,7 @@ const products = [
   {
     id: "lemon",
     name: "Lemon Strike",
+    short: "Lemon",
     image: "/products/lemon.webp",
     accent: "#ffd23c",
     description: "Crisp, sour lemon voltage that cuts clean through the charge.",
@@ -98,6 +101,7 @@ const products = [
   {
     id: "grape",
     name: "Grape Strike",
+    short: "Grape",
     image: "/products/grape.webp",
     accent: "#a05bff",
     description: "Cold, heavy grape with a dark-fruit depth that lingers.",
@@ -106,6 +110,8 @@ const products = [
     reviews: 287,
   },
 ] as const;
+
+
 
 /* ---- Product review rating: interactive bubbles instead of star icons ---- */
 function BubbleRating({
@@ -454,12 +460,12 @@ function runBubbleCanvas(
 
 export default function Home() {
   const introVideoRef = useRef<HTMLVideoElement>(null);
-  const introStartedAt = useRef<number | null>(null);
   const [introDone, setIntroDone] = useState(false);
 
-  // The intro plate plays once (muted) as soon as the hero is visible.
-  // Browsers block unmuted autoplay, so we force muted and kick off playback
-  // from JS after mount once the element has enough data to play.
+  // Website intro: a full-screen commercial plate that plays once on load,
+  // before the site itself is seen. Browsers block unmuted autoplay, so the
+  // video is forced muted and playback starts from JS once it can play.
+  // Any interaction (tap / scroll / key) dismisses the intro immediately.
   useEffect(() => {
     const v = introVideoRef.current;
     if (!v) return;
@@ -476,18 +482,32 @@ export default function Home() {
     };
     v.addEventListener('canplay', tryStart, { once: true });
     if (v.readyState >= 2) tryStart();
+
+    // Never trap the visitor: any tap / scroll / key skips the intro.
+    const dismiss = () => setIntroDone(true);
+    window.addEventListener('pointerdown', dismiss, { passive: true });
+    window.addEventListener('wheel', dismiss, { passive: true });
+    window.addEventListener('touchstart', dismiss, { passive: true });
+    window.addEventListener('keydown', dismiss);
     return () => {
       v.removeEventListener('canplay', tryStart);
+      window.removeEventListener('pointerdown', dismiss);
+      window.removeEventListener('wheel', dismiss);
+      window.removeEventListener('touchstart', dismiss);
+      window.removeEventListener('keydown', dismiss);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onIntroEnded = () => {
-    // The 10s intro plate has played through — leave it hidden and let the
-    // scroll-film hero carry the page from here.
-    setIntroDone(true);
-    introStartedAt.current = null;
-  };
+  // Once dismissed, stop playback so the muted video isn't playing invisibly.
+  useEffect(() => {
+    if (introDone) {
+      const v = introVideoRef.current;
+      if (v && !v.paused) v.pause();
+    }
+  }, [introDone]);
+
+  const onIntroEnded = () => setIntroDone(true);
 
   const sectionRef = useRef<HTMLElement>(null);
   const nutritionRef = useRef<HTMLElement>(null);
@@ -531,6 +551,11 @@ export default function Home() {
     setPrevCanIdx(canIdx);
     setCanIdx(index);
     setCanAutoTick((t) => t + 1); // restart the auto-rotate countdown after a manual pick
+    // Safety net: if the swap animation never ends (reduced motion, hidden
+    // tab, frozen compositor), release the swap lock so the selector lives.
+    window.setTimeout(() => {
+      setPrevCanIdx((p) => (p !== null ? null : p));
+    }, 900);
   };
 
   const stepCan = (delta: number) => {
@@ -547,10 +572,8 @@ export default function Home() {
       if (r.width === 0 || r.height === 0) continue;
       const relX = (e.clientX - r.left) / r.width;
       const relY = (e.clientY - r.top) / r.height;
-      // glare position
       el.style.setProperty("--gx", `${(relX * 100).toFixed(1)}%`);
       el.style.setProperty("--gy", `${(relY * 100).toFixed(1)}%`);
-      // subtle 3D tilt (degrees), toward the cursor
       el.style.setProperty("--rx", `${((0.5 - relY) * 10).toFixed(2)}deg`);
       el.style.setProperty("--ry", `${((relX - 0.5) * 12).toFixed(2)}deg`);
     }
@@ -571,6 +594,9 @@ export default function Home() {
     setCanDir(1);
     setPrevCanIdx(canIdxRef.current);
     setCanIdx(next);
+    window.setTimeout(() => {
+      setPrevCanIdx((p) => (p !== null ? null : p));
+    }, 900);
   };
 
   // auto-rotate: only while the section is visible, not hovered, and motion is allowed
@@ -729,11 +755,9 @@ export default function Home() {
       const heroEnd = window.innerHeight * 2.4 * 0.85;
       const scrolled = window.scrollY > heroEnd;
       setIsScrolled(scrolled);
-      // Fade the intro plate once the page starts scrolling — the scroll-film
-      // camera is coming up and the intro has done its job.
       const stage = sectionRef.current?.querySelector('.volt-sticky-stage');
       if (stage) {
-        stage.classList.toggle('volt-hero-scrolled', scrolled || introDone);
+        stage.classList.toggle('volt-hero-scrolled', scrolled);
       }
     };
     handleScroll();
@@ -743,7 +767,7 @@ export default function Home() {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [introDone]);
+  }, []);
 
   // ---- Cinematic lerp smooth scroll (slower, fluid wheel scrolling) ----
   useEffect(() => {
@@ -900,30 +924,7 @@ export default function Home() {
     return () => observer.disconnect();
   }, [reducedMotion]);
 
-  // Start the intro plate once the hero is visible; on a cold visit the browser
-  // only allows autoplay when muted, which is why the video is muted.
-  useEffect(() => {
-    const hero = sectionRef.current?.querySelector('#hero');
-    if (!hero || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          const video = introVideoRef.current;
-          if (video && !video.paused) return; // already playing
-          if (video) {
-            video.currentTime = 0;
-            video.play().catch(() => {});
-            introStartedAt.current = performance.now();
-          }
-          io.disconnect();
-        }
-      },
-      { threshold: 0.25 },
-    );
-    io.observe(hero);
-    return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // ---- Load hero frames ----
   useEffect(() => {
@@ -1838,6 +1839,27 @@ export default function Home() {
 
   return (
     <main className="volt-page">
+      {/* Website intro — full-screen commercial plate shown once before the
+          site itself is revealed. Any interaction dismisses it. */}
+      <div className={`volt-intro${introDone ? ' volt-intro--done' : ''}`}>
+        <video
+          ref={introVideoRef}
+          className="volt-intro-video"
+          muted
+          playsInline
+          preload="auto"
+          src="/volt-intro.mp4"
+          aria-hidden="true"
+          onEnded={onIntroEnded}
+        />
+        <button
+          type="button"
+          className="volt-intro-skip"
+          onClick={() => setIntroDone(true)}
+        >
+          Skip intro
+        </button>
+      </div>
       <nav className={`volt-nav ${isScrolled ? 'volt-nav--scrolled' : ''}`}>
         <div ref={particleContainerRef} className="volt-nav-particle-container" />
         {!isScrolled ? (
@@ -1899,19 +1921,6 @@ export default function Home() {
 
       <section ref={sectionRef} id="hero" className="volt-hero" aria-label="Volt energy drink hero">
         <div className="volt-sticky-stage">
-          {/* Intro commercial plate — autoplays muted once, then fades as the
-              scroll-film canvas (the product sequence) takes over. */}
-          <video
-            ref={introVideoRef}
-            className="volt-hero-intro"
-            data-done={introDone ? '1' : undefined}
-            muted
-            playsInline
-            preload="auto"
-            src="/volt-intro.mp4"
-            aria-hidden="true"
-            onEnded={onIntroEnded}
-          />
           <canvas ref={canvasRef} className="volt-canvas" aria-label="Volt can product animation" />
           <div className="volt-vignette" aria-hidden="true" />
           <div className="volt-grain" aria-hidden="true" />
@@ -2179,81 +2188,118 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Products page: liquid-glass cards over interactive soda-fizz bubbles */}
-      <section id="products" className="volt-products" aria-label="Volt products to buy">
+      {/* Products — giant Ciao-style flavor wordmark + can, cards below */}
+      <section id="products" className="volt-products volt-find-products" aria-label="Volt flavors — find your volt">
         <canvas ref={productsBubblesRef} className="volt-bubbles" aria-hidden="true" />
-        <div className="volt-products-inner">
-          <header className="volt-products-head volt-reveal">
-            <p className="volt-eyebrow"><span /> Volt strike energy</p>
-            <h2>Products</h2>
-            <p className="volt-subheading">Pick your flavor — priced per can <span>.</span></p>
-          </header>
 
+        {/* Flavor atmosphere: soft accent orb behind everything */}
+        <div className="volt-find-atmo" aria-hidden="true">
+          <span className="volt-find-orb" style={{ background: products[canIdx].accent }} />
+        </div>        <div className="volt-products-inner volt-find-inner volt-ciao-inner">
+          {/* Ciao-style hero — giant name left, big can right, many cans faded behind */}
           <div
-            className="volt-can-carousel volt-reveal"
-            style={{ transitionDelay: "120ms" }}
+            className="volt-ciao volt-reveal"
             onPointerEnter={() => setCanHover(true)}
             onPointerLeave={() => setCanHover(false)}
           >
-            <div className="volt-can-stage">
-              <div
-                className="volt-can-glow"
-                style={{ backgroundColor: products[canIdx].accent }}
-                aria-hidden="true"
-              />
-              {prevCanIdx !== null && (
-                <img
-                  key={`prev-${prevCanIdx}`}
-                  src={products[prevCanIdx].image}
-                  alt=""
-                  draggable={false}
-                  className={`volt-can-img volt-can-leave ${canDir > 0 ? "leave-next" : "leave-prev"}`}
-                  onAnimationEnd={() => setPrevCanIdx(null)}
-                />
-              )}
-              <img
-                key={`cur-${canIdx}`}
-                src={products[canIdx].image}
-                alt={`${products[canIdx].name} can`}
-                draggable={false}
-                className={`volt-can-img ${prevCanIdx !== null ? (canDir > 0 ? "enter-next" : "enter-prev") : ""}`}
-              />
-              <button className="volt-can-nav volt-can-prev" onClick={() => stepCan(-1)} aria-label="Previous flavor">
-                <ChevronLeft size={24} strokeWidth={1.6} />
-              </button>
-              <button className="volt-can-nav volt-can-next" onClick={() => stepCan(1)} aria-label="Next flavor">
-                <ChevronRight size={24} strokeWidth={1.6} />
-              </button>
+            {/* faded family deep in the background, all around the hero */}
+            <div className="volt-ghosts" aria-hidden="true">
+              {[0, 1, 2, 3, 4, 5].map((i) => {
+                const p = products[(canIdx + 1 + i) % products.length];
+                const spots = [
+                  { l: 9, t: 58, h: 15 },
+                  { l: 27, t: 34, h: 11 },
+                  { l: 44, t: 72, h: 17 },
+                  { l: 60, t: 22, h: 11 },
+                  { l: 79, t: 62, h: 16 },
+                  { l: 93, t: 36, h: 11 },
+                ];
+                const s = spots[i];
+                return (
+                  <img
+                    key={`g-${i}-${p.id}`}
+                    src={p.image}
+                    alt=""
+                    draggable={false}
+                    className="volt-ghost-can"
+                    style={{ left: `${s.l}%`, top: `${s.t}%`, height: `${s.h}vh` }}
+                  />
+                );
+              })}
             </div>
 
-            <div className="volt-can-details" key={`info-${canIdx}`}>
-              <p className="volt-product-kicker">Volt strike energy</p>
-              <h3 className="volt-can-name">{products[canIdx].name}</h3>
-              <p className="volt-product-desc">{products[canIdx].description}</p>
-              <BubbleRating
-                name={products[canIdx].name}
-                rating={products[canIdx].rating}
-                count={products[canIdx].reviews}
-              />
-              <div className="volt-product-foot volt-can-price-row">
-                <strong className="volt-product-price">{products[canIdx].price}</strong>
-                <span className="volt-product-unit">355 ml</span>
+            <div className="volt-ciao-cols">
+              {/* Left — the flavor name + details */}
+              <div className="volt-ciao-side" key={`name-${canIdx}`}>
+                <p className="volt-ciao-eyebrow"><span /> Volt strike energy</p>
+                <h2 className="volt-ciao-name" aria-label={`${products[canIdx].short} Strike`}>
+                  <span className="volt-ciao-name--l1">
+                    {products[canIdx].short.toUpperCase().split("").map((ch, i) => (
+                      <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + i * 0.045}s` }} aria-hidden="true">
+                        {ch === " " ? "\u00A0" : ch}
+                      </span>
+                    ))}
+                  </span>
+                  <span className="volt-ciao-name--l2">
+                    {"STRIKE".split("").map((ch, i) => (
+                      <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + products[canIdx].short.length * 0.045 + 0.18 + i * 0.03}s` }} aria-hidden="true">
+                        {ch === " " ? "\u00A0" : ch}
+                      </span>
+                    ))}
+                  </span>
+                </h2>
+                <p className="volt-ciao-desc">{products[canIdx].description}</p>
+                <div className="volt-ciao-meta">
+                  <span className="volt-find-price">
+                    <strong className="volt-find-price-num">{products[canIdx].price}</strong>
+                    <span className="volt-find-price-unit">/ can · 355 ml</span>
+                  </span>
+                  <button className="volt-find-cta" onClick={open360}>
+                    Select flavor
+                    <span className="volt-find-cta-arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
               </div>
-              <div className="volt-can-dots" role="tablist" aria-label="Choose flavor">
-                {products.map((p, i) => (
-                  <button
-                    key={p.id}
-                    role="tab"
-                    aria-selected={i === canIdx}
-                    aria-label={p.name}
-                    className={`volt-can-dot ${i === canIdx ? "active" : ""}`}
-                    onClick={() => selectCan(i)}
+
+              {/* Right — the big can */}
+              <div className="volt-ciao-can" style={{ "--acc": products[canIdx].accent } as React.CSSProperties}>
+                <div className="volt-ciao-can-glow" aria-hidden="true" />
+                <div className="volt-ciao-can-img" key={`can-${canIdx}`}>
+                  <img
+                    src={products[canIdx].image}
+                    alt={`${products[canIdx].name} can`}
+                    draggable={false}
                   />
-                ))}
+                </div>
               </div>
             </div>
+
+            <button className="volt-can-nav volt-can-prev" onClick={() => stepCan(-1)} aria-label="Previous flavor">
+              <ChevronLeft size={24} strokeWidth={1.6} />
+            </button>
+            <button className="volt-can-nav volt-can-next" onClick={() => stepCan(1)} aria-label="Next flavor">
+              <ChevronRight size={24} strokeWidth={1.6} />
+            </button>
           </div>
 
+          {/* Bottom — horizontal flavor navigation */}
+          <nav className="volt-find-nav volt-reveal" style={{ transitionDelay: "240ms" }} aria-label="Choose flavor">
+            {products.map((p, i) => (
+              <button
+                key={p.id}
+                className={`volt-find-tab ${i === canIdx ? "active" : ""}`}
+                style={{ "--acc": p.accent } as React.CSSProperties}
+                onClick={() => selectCan(i)}
+                aria-pressed={i === canIdx}
+              >
+                <span className="volt-find-tab-idx">0{i + 1}</span>
+                <span className="volt-find-tab-name">{p.short}</span>
+                <span className="volt-find-tab-line" aria-hidden="true" />
+              </button>
+            ))}
+          </nav>
+
+          {/* Full-lineup product cards */}
           <p className="volt-grid-label volt-reveal" style={{ transitionDelay: "60ms" }}>
             The full lineup — choose a can to preview it above
           </p>
@@ -2276,50 +2322,50 @@ export default function Home() {
                 aria-label={`Preview ${p.name}`}
               >
                 <div className="volt-product-tilt">
-                <GlassSurface
-                  width="100%"
-                  height="100%"
-                  borderRadius={26}
-                  borderWidth={0.05}
-                  brightness={16}
-                  opacity={0.82}
-                  blur={16}
-                  displace={1.3}
-                  backgroundOpacity={0.08}
-                  saturation={1.3}
-                  distortionScale={-90}
-                  redOffset={4}
-                  greenOffset={10}
-                  blueOffset={16}
-                  xChannel="R"
-                  yChannel="G"
-                  mixBlendMode="screen"
-                  className="volt-product-glass"
-                >
-                  <div className="volt-product-inner">
-                    <div
-                      className="volt-product-media"
-                      style={{
-                        background: `radial-gradient(circle at 50% 52%, ${p.accent}2e, transparent 72%)`,
-                      }}
-                    >
-                      <img src={p.image} alt={`${p.name} can`} loading="lazy" draggable={false} />
+                  <GlassSurface
+                    width="100%"
+                    height="100%"
+                    borderRadius={26}
+                    borderWidth={0.05}
+                    brightness={16}
+                    opacity={0.82}
+                    blur={16}
+                    displace={1.3}
+                    backgroundOpacity={0.08}
+                    saturation={1.3}
+                    distortionScale={-90}
+                    redOffset={4}
+                    greenOffset={10}
+                    blueOffset={16}
+                    xChannel="R"
+                    yChannel="G"
+                    mixBlendMode="screen"
+                    className="volt-product-glass"
+                  >
+                    <div className="volt-product-inner">
+                      <div
+                        className="volt-product-media"
+                        style={{
+                          background: `radial-gradient(circle at 50% 52%, ${p.accent}2e, transparent 72%)`,
+                        }}
+                      >
+                        <img src={p.image} alt={`${p.name} can`} loading="lazy" draggable={false} />
+                      </div>
+                      <p className="volt-product-kicker">Volt strike energy</p>
+                      <h3 className="volt-product-name">{p.name}</h3>
+                      <p className="volt-product-desc">{p.description}</p>
+                      <BubbleRating
+                        name={p.name}
+                        rating={p.rating}
+                        count={p.reviews}
+                      />
+                      <div className="volt-product-foot">
+                        <strong className="volt-product-price">{p.price}</strong>
+                        <span className="volt-product-unit">355 ml</span>
+                      </div>
                     </div>
-                    <p className="volt-product-kicker">Volt strike energy</p>
-                    <h3 className="volt-product-name">{p.name}</h3>
-                    <p className="volt-product-desc">{p.description}</p>
-                    <BubbleRating
-                      name={p.name}
-                      rating={p.rating}
-                      count={p.reviews}
-                    />
-                    <div className="volt-product-foot">
-                      <strong className="volt-product-price">{p.price}</strong>
-                      <span className="volt-product-unit">355 ml</span>
-                    </div>
-                  </div>
-                </GlassSurface>
-                <span className="volt-product-glare" aria-hidden="true" />
+                  </GlassSurface>
+                  <span className="volt-product-glare" aria-hidden="true" />
                 </div>
               </article>
             ))}
