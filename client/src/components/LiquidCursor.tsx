@@ -29,7 +29,9 @@ const DENSITY_DISSIPATION = 0.965; // trail fade per frame
 const VELOCITY_DISSIPATION = 0.99; // fluid slows down slowly
 const SIM_RES = 160; // velocity/pressure grid
 const DYE_RES = 512; // dye/density grid
-const DISPLAY_INTENSITY = 2.6; // demo's `intensity` prop (2.0 default, Volt-tuned)
+const DISPLAY_INTENSITY = 120; // alpha = dyeLength × intensity × 0.0001 — the demo's
+// 2.0 was tuned for its HDR postprocessing chain; over a dark DOM overlay it
+// computes ~0.02 alpha (invisible). 120 puts a mid-speed stroke at ~0.7 alpha.
 const MAX_DPR = 1.5;
 const BUBBLE_CAP = 200;
 const IDLE_PARK_MS = 2600;
@@ -211,7 +213,9 @@ void main() {
   float len = length(fluidColor);
   float intensity = clamp(len * uIntensity * 0.0001, 0.0, 1.0);
   if (intensity < 0.004) discard;
-  vec3 col = uTint * len * intensity; // premultiplied by alpha
+  // Premultiplied dye: color scales with alpha (never clips to white), with
+  // a subtle hot core on the fastest fluid.
+  vec3 col = mix(uTint, vec3(0.92, 1.0, 0.95), pow(intensity, 3.0) * 0.35) * intensity;
   gl_FragColor = vec4(col, intensity);
 }`;
 
