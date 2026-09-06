@@ -2196,60 +2196,69 @@ export default function Home() {
         <div className="volt-find-atmo" aria-hidden="true">
           <span className="volt-find-orb" style={{ background: products[canIdx].accent }} />
         </div>        <div className="volt-products-inner volt-find-inner volt-ciao-inner">
-          {/* Ciao-style hero — giant name left, big can right, many cans faded behind */}
+          {/* Ciao-style hero — one full shelf of cans across the screen: the
+              selected flavor big and lit in the middle, the rest receding to
+              the edges, name stacked below with a progress line. */}
           <div
             className="volt-ciao volt-reveal"
             onPointerEnter={() => setCanHover(true)}
             onPointerLeave={() => setCanHover(false)}
           >
-            {/* faded family deep in the background, all around the hero */}
-            <div className="volt-ghosts" aria-hidden="true">
-              {[0, 1, 2, 3, 4, 5].map((i) => {
-                const p = products[(canIdx + 1 + i) % products.length];
-                const spots = [
-                  { l: 9, t: 58, h: 15 },
-                  { l: 27, t: 34, h: 11 },
-                  { l: 44, t: 72, h: 17 },
-                  { l: 60, t: 22, h: 11 },
-                  { l: 79, t: 62, h: 16 },
-                  { l: 93, t: 36, h: 11 },
-                ];
-                const s = spots[i];
+            {/* the shelf — every flavor on stage at once */}
+            <div className="volt-shelf" aria-label="Flavor lineup">
+              {products.map((p, i) => {
+                // signed circular distance from the selected can
+                const n = products.length;
+                let d = i - canIdx;
+                if (d > n / 2) d -= n;
+                if (d < -n / 2) d += n;
+                const slot =
+                  d === 0 ? "c" : d === -1 ? "l1" : d === 1 ? "r1" : d === -2 ? "l2" : d === 2 ? "r2" : "f";
                 return (
-                  <img
-                    key={`g-${i}-${p.id}`}
-                    src={p.image}
-                    alt=""
-                    draggable={false}
-                    className="volt-ghost-can"
-                    style={{ left: `${s.l}%`, top: `${s.t}%`, height: `${s.h}vh` }}
-                  />
+                  <div
+                    key={p.id}
+                    className={`volt-shelf-item volt-shelf-slot--${slot}${d === 0 ? " is-center" : ""}`}
+                    style={{ "--acc": p.accent } as React.CSSProperties}
+                    onClick={() => selectCan(i)}
+                    role="button"
+                    tabIndex={d === 0 ? -1 : 0}
+                    aria-label={`Show ${p.name}`}
+                    aria-pressed={d === 0}
+                  >
+                    <img
+                      src={p.image}
+                      alt={`${p.name} can`}
+                      draggable={false}
+                      className="volt-shelf-can"
+                    />
+                  </div>
                 );
               })}
+              <div className="volt-shelf-glow" aria-hidden="true" style={{ background: products[canIdx].accent }} />
+              <div className="volt-shelf-floor" aria-hidden="true" />
             </div>
 
-            <div className="volt-ciao-cols">
-              {/* Left — the flavor name + details */}
-              <div className="volt-ciao-side" key={`name-${canIdx}`}>
-                <p className="volt-ciao-eyebrow"><span /> Volt strike energy</p>
-                <h2 className="volt-ciao-name" aria-label={`${products[canIdx].short} Strike`}>
-                  <span className="volt-ciao-name--l1">
-                    {products[canIdx].short.toUpperCase().split("").map((ch, i) => (
-                      <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + i * 0.045}s` }} aria-hidden="true">
-                        {ch === " " ? "\u00A0" : ch}
-                      </span>
-                    ))}
-                  </span>
-                  <span className="volt-ciao-name--l2">
-                    {"STRIKE".split("").map((ch, i) => (
-                      <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + products[canIdx].short.length * 0.045 + 0.18 + i * 0.03}s` }} aria-hidden="true">
-                        {ch === " " ? "\u00A0" : ch}
-                      </span>
-                    ))}
-                  </span>
-                </h2>
-                <p className="volt-ciao-desc">{products[canIdx].description}</p>
-                <div className="volt-ciao-meta">
+            {/* bottom center — stacked name like DOUBLE / LITCHI */}
+            <div className="volt-shelf-name" key={`name-${canIdx}`}>
+              <h2 className="volt-shelf-title" aria-label={`${products[canIdx].short} Strike`}>
+                <span className="volt-shelf-l1">
+                  {products[canIdx].short.toUpperCase().split("").map((ch, i) => (
+                    <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + i * 0.045}s` }} aria-hidden="true">
+                      {ch === " " ? "\u00A0" : ch}
+                    </span>
+                  ))}
+                </span>
+                <span className="volt-shelf-l2">
+                  {"STRIKE".split("").map((ch, i) => (
+                    <span key={`${ch}-${i}`} className="volt-find-name-letter" style={{ animationDelay: `${0.08 + products[canIdx].short.length * 0.045 + 0.18 + i * 0.03}s` }} aria-hidden="true">
+                      {ch === " " ? "\u00A0" : ch}
+                    </span>
+                  ))}
+                </span>
+              </h2>
+              <div className="volt-shelf-meta">
+                <p className="volt-shelf-desc">{products[canIdx].description}</p>
+                <div className="volt-shelf-buy">
                   <span className="volt-find-price">
                     <strong className="volt-find-price-num">{products[canIdx].price}</strong>
                     <span className="volt-find-price-unit">/ can · 355 ml</span>
@@ -2260,17 +2269,16 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-
-              {/* Right — the big can */}
-              <div className="volt-ciao-can" style={{ "--acc": products[canIdx].accent } as React.CSSProperties}>
-                <div className="volt-ciao-can-glow" aria-hidden="true" />
-                <div className="volt-ciao-can-img" key={`can-${canIdx}`}>
-                  <img
-                    src={products[canIdx].image}
-                    alt={`${products[canIdx].name} can`}
-                    draggable={false}
-                  />
-                </div>
+              {/* progress line — the dot slides to the selected flavor */}
+              <div className="volt-shelf-progress" aria-hidden="true">
+                <span
+                  className="volt-shelf-progress-dot"
+                  style={{ left: `${((canIdx + 0.5) / products.length) * 100}%`, background: products[canIdx].accent }}
+                />
+                <span
+                  className="volt-shelf-progress-fill"
+                  style={{ width: `${((canIdx + 0.5) / products.length) * 100}%`, background: products[canIdx].accent }}
+                />
               </div>
             </div>
 
