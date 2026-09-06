@@ -563,6 +563,24 @@ export default function Home() {
     selectCan((canIdx + delta + products.length) % products.length);
   };
 
+  // ---- Shelf swipe (touch): drag horizontally to move between flavors ----
+  const shelfTouch = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
+  const onShelfTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    shelfTouch.current = { x: t.clientX, y: t.clientY, active: true };
+  };
+  const onShelfTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!shelfTouch.current.active) return;
+    shelfTouch.current.active = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - shelfTouch.current.x;
+    const dy = t.clientY - shelfTouch.current.y;
+    // horizontal intent: clear sideways drag, not a vertical scroll
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      stepCan(dx < 0 ? 1 : -1);
+    }
+  };
+
   // ---- Product lineup cards: 3D tilt + glare that follows the cursor ----
   const tiltCards = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "touch") return;
@@ -2228,6 +2246,8 @@ export default function Home() {
               aria-label="Flavor lineup"
               onPointerMove={shelfParallax}
               onPointerLeave={shelfParallaxReset}
+              onTouchStart={onShelfTouchStart}
+              onTouchEnd={onShelfTouchEnd}
             >
               {products.map((p, i) => {
                 // signed circular distance from the selected can
