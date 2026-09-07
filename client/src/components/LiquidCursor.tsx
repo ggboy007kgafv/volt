@@ -396,10 +396,23 @@ export default function LiquidCursor({ targets, tint = [0.18, 0.95, 0.5] }: Prop
     let lastActivity = performance.now();
     let bubbleSpeed = 0; // smoothed, for bubble spawn
 
+    // Cached section rects — getBoundingClientRect on every mousemove forced
+    // synchronous layout twice per event and janked scrolling inside these
+    // sections. Rects refresh on scroll/resize (the only things that move them).
+    let rectCache: { left: number; right: number; top: number; bottom: number }[] = [];
+    const refreshRects = () => {
+      rectCache = sections.map((s) => {
+        const r = s.getBoundingClientRect();
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+      });
+    };
+    refreshRects();
+    window.addEventListener("scroll", refreshRects, { passive: true });
+    window.addEventListener("resize", refreshRects);
+
     const onMove = (e: PointerEvent) => {
       let inside = false;
-      for (const s of sections) {
-        const r = s.getBoundingClientRect();
+      for (const r of rectCache) {
         if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { inside = true; break; }
       }
       if (lastX < 0 || !inside) { lastX = e.clientX; lastY = e.clientY; return; }
@@ -682,6 +695,8 @@ export default function LiquidCursor({ targets, tint = [0.18, 0.95, 0.5] }: Prop
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("scroll", refreshRects);
+      window.removeEventListener("resize", refreshRects);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVis);
       // Deliberately do NOT lose the context: the canvas survives React

@@ -520,14 +520,28 @@ export default function Home() {
   const rafRef = useRef<number | null>(null);
   const targetProgressRef = useRef(0);
   const displayedProgressRef = useRef(0);
-  const [progress, setProgress] = useState(0);
+  // Volatile per-frame readouts (progress bar, frame counters, copy fade) are
+  // written straight to the DOM via these refs from the render loops instead
+  // of React state — a setState per scroll frame re-rendered the entire page
+  // and was the main source of scroll jank. Zero design change.
+  const heroCopyRef = useRef<HTMLDivElement>(null);
+  const heroBarRef = useRef<HTMLSpanElement>(null);
+  const heroCountRef = useRef<HTMLSpanElement>(null);
+  const heroStatusRef = useRef<HTMLSpanElement>(null);
+  const sec2CountRef = useRef<HTMLSpanElement>(null);
+  const sec2StatusRef = useRef<HTMLSpanElement>(null);
+  const aboutCountRef = useRef<HTMLSpanElement>(null);
+  const aboutStatusRef = useRef<HTMLSpanElement>(null);
+  const strikeCountRef = useRef<HTMLSpanElement>(null);
+  const strikeStatusRef = useRef<HTMLSpanElement>(null);
+  const factoryCountRef = useRef<HTMLSpanElement>(null);
+  const factoryStatusRef = useRef<HTMLSpanElement>(null);
   const [soundOn, setSoundOn] = useState(false);
   const liqRef = useRef<LiquidTransitionHandle>(null);
   const lerpStopRef = useRef<(() => void) | null>(null);
   // Set while the 360 viewer overlay is open so the cinematic wheel-lerp
   // stands down and the overlay's own scroller receives native wheel input.
   const expOpenRef = useRef(false);
-  const [loadedFrames, setLoadedFrames] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [nutritionVisible, setNutritionVisible] = useState(false);
 
@@ -687,8 +701,6 @@ export default function Home() {
   const sec2RafRef = useRef<number | null>(null);
   const sec2TargetRef = useRef(0);
   const sec2DisplayRef = useRef(0);
-  const [sec2Progress, setSec2Progress] = useState(0);
-  const [sec2Loaded, setSec2Loaded] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const particleContainerRef = useRef<HTMLDivElement>(null);
 
@@ -699,8 +711,6 @@ export default function Home() {
   const aboutRafRef = useRef<number | null>(null);
   const aboutTargetRef = useRef(0);
   const aboutDisplayRef = useRef(0);
-  const [aboutProgress, setAboutProgress] = useState(0);
-  const [aboutLoaded, setAboutLoaded] = useState(0);
   const productsBubblesRef = useRef<HTMLCanvasElement>(null);
   const bubblesRef = useRef<HTMLCanvasElement>(null);
 
@@ -711,8 +721,6 @@ export default function Home() {
   const strikeRafRef = useRef<number | null>(null);
   const strikeTargetRef = useRef(0);
   const strikeDisplayRef = useRef(0);
-  const [strikeProgress, setStrikeProgress] = useState(0);
-  const [strikeLoaded, setStrikeLoaded] = useState(0);
 
   // ---- Factory scroll-canvas sequence ----
   const factorySectionRef = useRef<HTMLElement>(null);
@@ -721,8 +729,6 @@ export default function Home() {
   const factoryRafRef = useRef<number | null>(null);
   const factoryTargetRef = useRef(0);
   const factoryDisplayRef = useRef(0);
-  const [factoryProgress, setFactoryProgress] = useState(0);
-  const [factoryLoaded, setFactoryLoaded] = useState(0);
   // Factory film — on-demand overlay (opened only from the end-menu).
   const [factoryOpen, setFactoryOpen] = useState(false);
   const factoryOpenRef = useRef(false);
@@ -972,6 +978,7 @@ export default function Home() {
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = FRAME_SOURCES.map(() => null);
     frameImagesRef.current = images;
+    let loaded = 0;
 
     const loadFrame = (index: number) => {
       if (cancelled || images[index]) return;
@@ -982,7 +989,12 @@ export default function Home() {
         if (cancelled) return;
         images[index] = image;
         frameImagesRef.current[index] = image;
-        setLoadedFrames((current) => current + 1);
+        // Status label flips once, straight in the DOM — no React re-render
+        // per frame (each of the ~150 loads used to re-render the whole page).
+        loaded += 1;
+        if (loaded === FRAME_SOURCES.length) {
+          flipStatus(heroStatusRef, "Product film ready");
+        }
       };
       image.onerror = () => {
         if (!cancelled && index !== 0) {
@@ -1020,7 +1032,17 @@ export default function Home() {
   const sec2Near = useNearViewport(nutritionSectionRef);
   const aboutNear = useNearViewport(aboutSectionRef);
   const strikeNear = useNearViewport(strikeSectionRef);
-  const factoryNear = useNearViewport(factorySectionRef);
+  // Factory frames load only when the overlay actually opens — the overlay
+  // isn't mounted while closed, so an IntersectionObserver here would see a
+  // null element and "pass", eagerly downloading 300 frames (~6MB) on every
+  // page load even for visitors who never open the factory.
+  const factoryNear = factoryOpen;
+
+  // Shared: flip a "Loading … / … ready" status label once all frames land.
+  const flipStatus = (ref: MutableRefObject<HTMLSpanElement | null>, readyLabel: string) => {
+    const el = ref.current;
+    if (el) el.textContent = readyLabel;
+  };
 
   // ---- Load second-section frames (deferred until the section nears the viewport) ----
   useEffect(() => {
@@ -1029,6 +1051,7 @@ export default function Home() {
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = SECTION2_FRAME_SOURCES.map(() => null);
     sec2FrameImagesRef.current = images;
+    let loaded = 0;
 
     const loadFrame = (index: number) => {
       if (cancelled || images[index]) return;
@@ -1039,7 +1062,10 @@ export default function Home() {
         if (cancelled) return;
         images[index] = image;
         sec2FrameImagesRef.current[index] = image;
-        setSec2Loaded((c) => c + 1);
+        loaded += 1;
+        if (loaded === SECTION2_FRAME_SOURCES.length) {
+          flipStatus(sec2StatusRef, "Sequence ready");
+        }
       };
       image.onerror = () => {
         if (!cancelled && index !== 0) {
@@ -1081,6 +1107,7 @@ export default function Home() {
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = ABOUT_FRAME_SOURCES.map(() => null);
     aboutFrameImagesRef.current = images;
+    let loaded = 0;
 
     const loadFrame = (index: number) => {
       if (cancelled || images[index]) return;
@@ -1091,7 +1118,10 @@ export default function Home() {
         if (cancelled) return;
         images[index] = image;
         aboutFrameImagesRef.current[index] = image;
-        setAboutLoaded((c) => c + 1);
+        loaded += 1;
+        if (loaded === ABOUT_FRAME_SOURCES.length) {
+          flipStatus(aboutStatusRef, "Story ready");
+        }
       };
       image.onerror = () => {
         if (!cancelled && index !== 0) {
@@ -1133,6 +1163,7 @@ export default function Home() {
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = STRIKE_FRAME_SOURCES.map(() => null);
     strikeFrameImagesRef.current = images;
+    let loaded = 0;
 
     const loadFrame = (index: number) => {
       if (cancelled || images[index]) return;
@@ -1143,7 +1174,10 @@ export default function Home() {
         if (cancelled) return;
         images[index] = image;
         strikeFrameImagesRef.current[index] = image;
-        setStrikeLoaded((c) => c + 1);
+        loaded += 1;
+        if (loaded === STRIKE_FRAME_SOURCES.length) {
+          flipStatus(strikeStatusRef, "Strike sequence ready");
+        }
       };
       image.onerror = () => {
         if (!cancelled && index !== 0) {
@@ -1185,6 +1219,7 @@ export default function Home() {
     let nextBatchTimer: number | undefined;
     const images: (HTMLImageElement | null)[] = FACTORY_FRAME_SOURCES.map(() => null);
     factoryFrameImagesRef.current = images;
+    let loaded = 0;
 
     const loadFrame = (index: number) => {
       if (cancelled || images[index]) return;
@@ -1195,7 +1230,10 @@ export default function Home() {
         if (cancelled) return;
         images[index] = image;
         factoryFrameImagesRef.current[index] = image;
-        setFactoryLoaded((c) => c + 1);
+        loaded += 1;
+        if (loaded === FACTORY_FRAME_SOURCES.length) {
+          flipStatus(factoryStatusRef, "Factory sequence ready");
+        }
       };
       image.onerror = () => {
         if (!cancelled && index !== 0) {
@@ -1261,17 +1299,22 @@ export default function Home() {
       const nextProgress = displayedProgressRef.current;
 
       const frameIndex = Math.round(nextProgress * (FRAME_SOURCES.length - 1));
-      const pct = Math.round(nextProgress * 100);
-      if (pct !== lastHeroPct) {
-        lastHeroPct = pct;
-        if (Math.abs(difference) > 0.0005 || reducedMotion) {
-          setProgress(nextProgress);
-        }
+      // HUD updates go straight to the DOM — no React re-render per frame.
+      if (heroCopyRef.current) {
+        heroCopyRef.current.style.opacity = String(1 - clamp(nextProgress / 0.3, 0, 1));
+      }
+      if (heroBarRef.current) {
+        heroBarRef.current.style.height = `${Math.round(nextProgress * 100)}%`;
+      }
+      if (heroCountRef.current) {
+        heroCountRef.current.textContent = `${String(Math.min(FRAME_SOURCES.length, Math.max(1, frameIndex + 1))).padStart(3, "0")} / ${String(FRAME_SOURCES.length).padStart(3, "0")}`;
       }
       const image = frameImagesRef.current[frameIndex] ?? frameImagesRef.current[0];
       let drew = false;
       if (image && image.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // 1.5 device pixels is visually identical on this footage but paints
+        // ~30% fewer pixels per frame than a full 2× DPR.
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const width = window.innerWidth;
         const height = window.innerHeight;
         const pixelWidth = Math.floor(width * dpr);
@@ -1328,7 +1371,6 @@ export default function Home() {
     const section = nutritionSectionRef.current;
     if (!canvas || !section) return;
     let lastSec2Drawn = -1;
-    let lastSec2Pct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
@@ -1347,17 +1389,15 @@ export default function Home() {
       const diff = sec2TargetRef.current - sec2DisplayRef.current;
       sec2DisplayRef.current += diff * 0.11;
       const p = sec2DisplayRef.current;
-      const pct = Math.round(p * 100);
-      if (pct !== lastSec2Pct) {
-        lastSec2Pct = pct;
-        if (Math.abs(diff) > 0.0005) setSec2Progress(p);
-      }
 
       const idx = Math.round(p * (SECTION2_FRAME_SOURCES.length - 1));
+      if (sec2CountRef.current) {
+        sec2CountRef.current.textContent = `${String(Math.min(SECTION2_FRAME_SOURCES.length, Math.max(1, idx + 1))).padStart(3, "0")} / ${String(SECTION2_FRAME_SOURCES.length).padStart(3, "0")}`;
+      }
       const img = sec2FrameImagesRef.current[idx] ?? sec2FrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1405,7 +1445,6 @@ export default function Home() {
     const section = aboutSectionRef.current;
     if (!canvas || !section) return;
     let lastAboutDrawn = -1;
-    let lastAboutPct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
@@ -1424,17 +1463,15 @@ export default function Home() {
       const diff = aboutTargetRef.current - aboutDisplayRef.current;
       aboutDisplayRef.current += diff * 0.11;
       const p = aboutDisplayRef.current;
-      const pct = Math.round(p * 100);
-      if (pct !== lastAboutPct) {
-        lastAboutPct = pct;
-        if (Math.abs(diff) > 0.0005) setAboutProgress(p);
-      }
 
       const idx = Math.round(p * (ABOUT_FRAME_SOURCES.length - 1));
+      if (aboutCountRef.current) {
+        aboutCountRef.current.textContent = `${String(Math.min(ABOUT_FRAME_SOURCES.length, Math.max(1, idx + 1))).padStart(3, "0")} / ${String(ABOUT_FRAME_SOURCES.length).padStart(3, "0")}`;
+      }
       const img = aboutFrameImagesRef.current[idx] ?? aboutFrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1482,7 +1519,6 @@ export default function Home() {
     const section = strikeSectionRef.current;
     if (!canvas || !section) return;
     let lastStrikeDrawn = -1;
-    let lastStrikePct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
@@ -1501,17 +1537,16 @@ export default function Home() {
       const diff = strikeTargetRef.current - strikeDisplayRef.current;
       strikeDisplayRef.current += diff * 0.11;
       const p = strikeDisplayRef.current;
-      const pct = Math.round(p * 100);
-      if (pct !== lastStrikePct) {
-        lastStrikePct = pct;
-        if (Math.abs(diff) > 0.0005) setStrikeProgress(p);
-      }
 
       const idx = Math.round(p * (STRIKE_FRAME_SOURCES.length - 1));
+      if (strikeCountRef.current) {
+        strikeCountRef.current.textContent = `${String(Math.min(STRIKE_FRAME_SOURCES.length, Math.max(1, idx + 1))).padStart(3, "0")} / ${String(STRIKE_FRAME_SOURCES.length).padStart(3, "0")}`;
+      }
+
       const img = strikeFrameImagesRef.current[idx] ?? strikeFrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1559,7 +1594,6 @@ export default function Home() {
     const section = factorySectionRef.current;
     if (!canvas || !section) return;
     let lastFactoryDrawn = -1;
-    let lastFactoryPct = -1;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
@@ -1578,17 +1612,15 @@ export default function Home() {
       const diff = factoryTargetRef.current - factoryDisplayRef.current;
       factoryDisplayRef.current += diff * 0.11;
       const p = factoryDisplayRef.current;
-      const pct = Math.round(p * 100);
-      if (pct !== lastFactoryPct) {
-        lastFactoryPct = pct;
-        if (Math.abs(diff) > 0.0005) setFactoryProgress(p);
-      }
 
       const idx = Math.round(p * (FACTORY_FRAME_SOURCES.length - 1));
+      if (factoryCountRef.current) {
+        factoryCountRef.current.textContent = `${String(Math.min(FACTORY_FRAME_SOURCES.length, Math.max(1, idx + 1))).padStart(3, "0")} / ${String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}`;
+      }
       const img = factoryFrameImagesRef.current[idx] ?? factoryFrameImagesRef.current[0];
       let drew = false;
       if (img && img.naturalWidth > 0) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = canvas.parentElement?.clientWidth ?? 400;
         const h = canvas.parentElement?.clientHeight ?? 600;
         const pw = Math.floor(w * dpr);
@@ -1635,26 +1667,8 @@ export default function Home() {
     // loop each time it mounts.
   }, [factoryOpen]);
 
-  const copyOpacity = 1 - clamp(progress / 0.3, 0, 1);
-  const progressPercent = Math.round(progress * 100);
-  const frameNumber = String(Math.min(FRAME_SOURCES.length, Math.max(1, Math.round(progress * (FRAME_SOURCES.length - 1)) + 1))).padStart(3, "0");
-
-  const sec2FrameNumber = String(
-    Math.min(SECTION2_FRAME_SOURCES.length, Math.max(1, Math.round(sec2Progress * (SECTION2_FRAME_SOURCES.length - 1)) + 1)),
-  ).padStart(3, "0");
-
-  const aboutFrameNumber = String(
-    Math.min(ABOUT_FRAME_SOURCES.length, Math.max(1, Math.round(aboutProgress * (ABOUT_FRAME_SOURCES.length - 1)) + 1)),
-  ).padStart(3, "0");
-
-  const strikeFrameNumber = String(
-    Math.min(STRIKE_FRAME_SOURCES.length, Math.max(1, Math.round(strikeProgress * (STRIKE_FRAME_SOURCES.length - 1)) + 1)),
-  ).padStart(3, "0");
-
-  const factoryFrameNumber = String(
-    Math.min(FACTORY_FRAME_SOURCES.length, Math.max(1, Math.round(factoryProgress * (FACTORY_FRAME_SOURCES.length - 1)) + 1)),
-  ).padStart(3, "0");
-
+  // Per-frame HUD values (progress %, frame counters, copy fade) are updated
+  // directly by the render loops via refs — no React state, no re-renders.
   const spawnParticles = (centerX: number, centerY: number) => {
     const container = particleContainerRef.current;
     if (!container) return;
@@ -1965,7 +1979,7 @@ export default function Home() {
           <div className="volt-vignette" aria-hidden="true" />
           <div className="volt-grain" aria-hidden="true" />
 
-          <div className="volt-copy" style={{ opacity: copyOpacity }}>
+          <div ref={heroCopyRef} className="volt-copy">
             <p className="volt-eyebrow"><span /> Charge, held in frame</p>
             <h1>Volt energy drink</h1>
             <p className="volt-subheading">gives you power <span>.</span></p>
@@ -1980,16 +1994,16 @@ export default function Home() {
             <span className="volt-caption-index">V / 2026</span>
           </div>
 
-          <aside className="volt-progress" aria-label={`Animation progress ${progressPercent}%`}>
-            <div className="volt-progress-track"><span style={{ height: `${progressPercent}%` }} /></div>
+          <aside className="volt-progress" aria-label="Animation progress">
+            <div className="volt-progress-track"><span ref={heroBarRef} style={{ height: "0%" }} /></div>
             <div className="volt-progress-labels">
               <span>Scroll</span>
-              <span>{frameNumber} / {String(FRAME_SOURCES.length).padStart(3, "0")}</span>
+              <span ref={heroCountRef}>001 / {String(FRAME_SOURCES.length).padStart(3, "0")}</span>
             </div>
           </aside>
 
           <div className="volt-bottom-bar">
-            <span>{loadedFrames < FRAME_SOURCES.length ? "Loading product film" : "Product film ready"}</span>
+            <span ref={heroStatusRef}>Loading product film</span>
             <span className="volt-bottom-line" />
             <span>Scroll to explore <ArrowDown size={13} strokeWidth={1.8} /></span>
           </div>
@@ -2105,10 +2119,10 @@ export default function Home() {
 
           {/* Bottom bar */}
           <div className="volt-bottom-bar">
-            <span>{sec2Loaded < SECTION2_FRAME_SOURCES.length ? "Loading sequence" : "Sequence ready"}</span>
+            <span ref={sec2StatusRef}>Loading sequence</span>
             <span className="volt-bottom-line" />
-            <span>
-              {sec2FrameNumber} / {String(SECTION2_FRAME_SOURCES.length).padStart(3, "0")}
+            <span ref={sec2CountRef}>
+              001 / {String(SECTION2_FRAME_SOURCES.length).padStart(3, "0")}
             </span>
           </div>
         </div>
@@ -2188,10 +2202,10 @@ export default function Home() {
 
           {/* Bottom bar */}
           <div className="volt-bottom-bar">
-            <span>{aboutLoaded < ABOUT_FRAME_SOURCES.length ? "Loading story" : "Story ready"}</span>
+            <span ref={aboutStatusRef}>Loading story</span>
             <span className="volt-bottom-line" />
-            <span>
-              {aboutFrameNumber} / {String(ABOUT_FRAME_SOURCES.length).padStart(3, "0")}
+            <span ref={aboutCountRef}>
+              001 / {String(ABOUT_FRAME_SOURCES.length).padStart(3, "0")}
             </span>
           </div>
         </div>
@@ -2219,10 +2233,10 @@ export default function Home() {
 
           {/* Bottom bar */}
           <div className="volt-bottom-bar">
-            <span>{strikeLoaded < STRIKE_FRAME_SOURCES.length ? "Loading sequence" : "Strike sequence ready"}</span>
+            <span ref={strikeStatusRef}>Loading sequence</span>
             <span className="volt-bottom-line" />
-            <span>
-              {strikeFrameNumber} / {String(STRIKE_FRAME_SOURCES.length).padStart(3, "0")}
+            <span ref={strikeCountRef}>
+              001 / {String(STRIKE_FRAME_SOURCES.length).padStart(3, "0")}
             </span>
           </div>
         </div>
@@ -2701,10 +2715,10 @@ export default function Home() {
 
                 {/* Bottom bar */}
                 <div className="volt-bottom-bar">
-                  <span>{factoryLoaded < FACTORY_FRAME_SOURCES.length ? "Loading factory" : "Factory sequence ready"}</span>
+                  <span ref={factoryStatusRef}>Loading factory</span>
                   <span className="volt-bottom-line" />
-                  <span>
-                    {factoryFrameNumber} / {String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}
+                  <span ref={factoryCountRef}>
+                    001 / {String(FACTORY_FRAME_SOURCES.length).padStart(3, "0")}
                   </span>
                 </div>
               </div>
